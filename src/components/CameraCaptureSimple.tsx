@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
-import Webcam from "react-webcam";
 import { CircleGuide } from "@/components/CircleGuide";
-import { PreciseCameraGuideManager } from "@/utils/preciseCameraGuide";
 import type { CameraProps } from "@/types";
+import { PreciseCameraGuideManager } from "@/utils/preciseCameraGuide";
+import React, { useEffect, useRef, useState } from "react";
+import Webcam from "react-webcam";
 
 export const CameraCaptureSimple: React.FC<CameraProps> = ({
   onCapture,
@@ -48,7 +48,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
 
       const naturalVideoSize = {
         width: videoElement.videoWidth,
-        height: videoElement.videoHeight
+        height: videoElement.videoHeight,
       };
 
       // スクリーンショット画像のサイズを取得
@@ -61,7 +61,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
 
       const screenshotSize = {
         width: img.width,
-        height: img.height
+        height: img.height,
       };
 
       // 精密な座標変換を実行
@@ -71,11 +71,11 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
         screenshotSize
       );
 
-      console.log('PreciseCameraGuide calculation:', {
+      console.log("PreciseCameraGuide calculation:", {
         viewport: dimensions,
         naturalVideo: naturalVideoSize,
         screenshot: screenshotSize,
-        cropData
+        cropData,
       });
 
       if (!cropData.isValid) {
@@ -83,7 +83,10 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
         return;
       }
 
-      const croppedFile = await preciseGuideManager.cropImagePrecise(screenshot, cropData);
+      const croppedFile = await preciseGuideManager.cropImagePrecise(
+        screenshot,
+        cropData
+      );
       if (!croppedFile) {
         onError?.("画像の処理に失敗しました。");
         return;
@@ -98,7 +101,6 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
     }
   };
 
-
   return (
     <div className="relative h-screen bg-black overflow-hidden">
       <div className="relative w-full" style={{ height: dimensions.height }}>
@@ -111,6 +113,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
             width: 1920,
             height: 1080,
           }}
+          mirrored={true}
           className="w-full h-full object-cover"
           style={{ transform: "scaleX(-1)" }}
           onUserMediaError={(error) => {
