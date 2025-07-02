@@ -60,11 +60,11 @@ export default function SettingsPage() {
           <div className="p-6">
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-3">撮影したピザ</h2>
-              <div className="relative rounded-lg overflow-hidden shadow-md">
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden shadow-md bg-gray-100">
                 <img
                   src={imageUrl}
                   alt="撮影したピザ"
-                  className="w-full h-64 object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
             </div>

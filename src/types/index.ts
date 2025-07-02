@@ -19,6 +19,9 @@ export interface AppState {
   divisionLines: Line[];
   peopleCount: number;
   evaluationScore?: number;
+  idealSvg?: string;
+  accountName?: string;
+  uuid?: string;
 }
 
 export interface CameraProps {
@@ -28,7 +31,47 @@ export interface CameraProps {
 
 export interface DivisionOverlayProps {
   imageUrl: string;
-  divisionLines: Line[];
-  salamiPositions: Point[];
+  idealSvg?: string;
+  divisionLines?: Line[];
+  salamiPositions?: Point[];
   pieceValues?: number[];
+}
+
+// API Request/Response Types
+export interface CalculateIdealCutRequest {
+  image: string; // base64_encoded_image
+  num_pieces: number;
+}
+
+export interface CalculateIdealCutResponse {
+  svg: string;
+}
+
+export interface CalculateScoreRequest {
+  actual_image: string; // base64_encoded_image
+  ideal_image: string; // base64_encoded_image
+}
+
+export interface CalculateScoreResponse {
+  score: number;
+}
+
+export interface SaveScoreRequest {
+  account_name: string;
+  uuid: string;
+  score: number;
+}
+
+export interface SaveScoreResponse {
+  success: boolean;
+}
+
+export interface RankingEntry {
+  rank: number;
+  account_name: string;
+  score: number;
+}
+
+export interface RankingResponse {
+  ranking: RankingEntry[];
 }

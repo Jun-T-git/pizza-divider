@@ -4,15 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { DivisionOverlay } from '@/components/DivisionOverlay';
-import { calculateDivision, analyzePizza } from '@/utils/dummyApi';
-import { Point, Line } from '@/types';
+import { calculateIdealCut } from '@/utils/apiClient';
 
 export default function ResultPage() {
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [salamiPositions, setSalamiPositions] = useState<Point[]>([]);
-  const [divisionLines, setDivisionLines] = useState<Line[]>([]);
-  const [pieceValues, setPieceValues] = useState<number[]>([]);
+  const [idealSvg, setIdealSvg] = useState<string | null>(null);
   const [peopleCount, setPeopleCount] = useState<number>(2);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,8 +19,9 @@ export default function ResultPage() {
       try {
         const savedImage = localStorage.getItem('pizzaImage');
         const savedPeopleCount = localStorage.getItem('peopleCount');
+        const savedImageFile = localStorage.getItem('pizzaImageFile');
         
-        if (!savedImage || !savedPeopleCount) {
+        if (!savedImage || !savedPeopleCount || !savedImageFile) {
           router.push('/');
           return;
         }
@@ -32,17 +30,29 @@ export default function ResultPage() {
         const people = parseInt(savedPeopleCount);
         setPeopleCount(people);
 
-        const imageFile = new File([''], 'pizza.jpg', { type: 'image/jpeg' });
-        const salamis = await analyzePizza(imageFile);
-        setSalamiPositions(salamis);
+        // 保存されたファイル情報から File オブジェクトを再構築
+        const fileInfo = JSON.parse(savedImageFile);
+        
+        // base64からBlobを作成してFileオブジェクトに変換
+        const base64Data = savedImage.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: fileInfo.type });
+        const imageFile = new File([blob], fileInfo.name, {
+          type: fileInfo.type,
+          lastModified: fileInfo.lastModified
+        });
 
-        const { lines, values } = await calculateDivision(salamis, people);
-        setDivisionLines(lines);
-        setPieceValues(values);
+        // 理想的な切り方を計算
+        const response = await calculateIdealCut(imageFile, people);
+        setIdealSvg(response.svg);
 
-        localStorage.setItem('salamiPositions', JSON.stringify(salamis));
-        localStorage.setItem('divisionLines', JSON.stringify(lines));
-        localStorage.setItem('pieceValues', JSON.stringify(values));
+        // 結果をlocalStorageに保存（評価で使用）
+        localStorage.setItem('idealSvg', response.svg);
 
       } catch (err) {
         console.error('Error loading result:', err);
@@ -99,9 +109,7 @@ export default function ResultPage() {
               </h2>
               <DivisionOverlay
                 imageUrl={imageUrl}
-                divisionLines={divisionLines}
-                salamiPositions={salamiPositions}
-                pieceValues={pieceValues}
+                idealSvg={idealSvg || undefined}
               />
             </div>
 

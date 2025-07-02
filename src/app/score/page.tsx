@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { evaluateDivision } from '@/utils/dummyApi';
+import { calculateScore, saveScore, generateUUID } from '@/utils/apiClient';
 
 export default function ScorePage() {
   const router = useRouter();
@@ -12,14 +12,19 @@ export default function ScorePage() {
   const [score, setScore] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accountName, setAccountName] = useState<string>('ピザ太郎');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const loadAndEvaluate = async () => {
       try {
         const savedBeforeImage = localStorage.getItem('pizzaImage');
         const savedAfterImage = localStorage.getItem('afterPizzaImage');
+        const savedBeforeImageFile = localStorage.getItem('pizzaImageFile');
+        const savedAfterImageFile = localStorage.getItem('afterPizzaImageFile');
         
-        if (!savedBeforeImage || !savedAfterImage) {
+        if (!savedBeforeImage || !savedAfterImage || !savedBeforeImageFile || !savedAfterImageFile) {
           router.push('/result');
           return;
         }
@@ -27,11 +32,28 @@ export default function ScorePage() {
         setBeforeImage(savedBeforeImage);
         setAfterImage(savedAfterImage);
 
-        const beforeFile = new File([''], 'before.jpg', { type: 'image/jpeg' });
-        const afterFile = new File([''], 'after.jpg', { type: 'image/jpeg' });
+        // File オブジェクトを再構築
+        const createFileFromData = (imageData: string, fileInfoStr: string) => {
+          const fileInfo = JSON.parse(fileInfoStr);
+          const base64Data = imageData.split(',')[1];
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: fileInfo.type });
+          return new File([blob], fileInfo.name, {
+            type: fileInfo.type,
+            lastModified: fileInfo.lastModified
+          });
+        };
+
+        const beforeFile = createFileFromData(savedBeforeImage, savedBeforeImageFile);
+        const afterFile = createFileFromData(savedAfterImage, savedAfterImageFile);
         
-        const evaluationScore = await evaluateDivision(beforeFile, afterFile);
-        setScore(evaluationScore);
+        const response = await calculateScore(afterFile, beforeFile);
+        setScore(response.score);
 
       } catch (err) {
         console.error('Error evaluating division:', err);
@@ -43,6 +65,29 @@ export default function ScorePage() {
 
     loadAndEvaluate();
   }, [router]);
+
+  const handleSaveScore = async () => {
+    if (score === null) return;
+    
+    setIsSaving(true);
+    try {
+      const uuid = generateUUID();
+      await saveScore(accountName, uuid, score);
+      setIsSaved(true);
+      
+      // 結果をlocalStorageに保存
+      localStorage.setItem('savedScore', JSON.stringify({
+        accountName,
+        uuid,
+        score
+      }));
+    } catch (err) {
+      console.error('Error saving score:', err);
+      alert('スコアの保存に失敗しました');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600';
@@ -105,23 +150,27 @@ export default function ScorePage() {
               </p>
             </div>
 
-            <div className="space-y-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-2">分割前</h3>
-                <img
-                  src={beforeImage}
-                  alt="分割前のピザ"
-                  className="w-full h-32 object-cover rounded-lg shadow-md"
-                />
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden shadow-md bg-gray-100">
+                  <img
+                    src={beforeImage}
+                    alt="分割前のピザ"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </div>
               
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-2">分割後</h3>
-                <img
-                  src={afterImage}
-                  alt="分割後のピザ"
-                  className="w-full h-32 object-cover rounded-lg shadow-md"
-                />
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden shadow-md bg-gray-100">
+                  <img
+                    src={afterImage}
+                    alt="分割後のピザ"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </div>
             </div>
 
@@ -134,10 +183,63 @@ export default function ScorePage() {
               </ul>
             </div>
 
+            {!isSaved && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 className="text-sm font-semibold text-blue-800 mb-3">スコアを保存してランキングに参加</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label htmlFor="accountName" className="block text-sm font-medium text-gray-700 mb-1">
+                      アカウント名
+                    </label>
+                    <input
+                      type="text"
+                      id="accountName"
+                      value={accountName}
+                      onChange={(e) => setAccountName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="ニックネームを入力"
+                      maxLength={20}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveScore}
+                    disabled={isSaving || !accountName.trim()}
+                    className={`
+                      w-full py-3 px-4 rounded-lg font-medium transition-colors
+                      ${isSaving || !accountName.trim()
+                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      }
+                    `}
+                  >
+                    {isSaving ? 'スコア保存中...' : 'スコアを保存'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {isSaved && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                <div className="text-green-600 text-2xl mb-2">✅</div>
+                <p className="text-green-800 font-medium">スコアが保存されました！</p>
+                <Link href="/ranking">
+                  <button className="mt-3 text-green-600 hover:text-green-700 font-medium underline">
+                    ランキングを見る
+                  </button>
+                </Link>
+              </div>
+            )}
+
             <div className="space-y-3">
               <Link href="/">
                 <button className="w-full py-4 px-6 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors shadow-lg">
                   新しいピザを分割する
+                </button>
+              </Link>
+
+              <Link href="/ranking">
+                <button className="w-full py-3 px-6 rounded-lg bg-purple-500 hover:bg-purple-600 text-white font-medium transition-colors">
+                  ランキングを見る
                 </button>
               </Link>
 

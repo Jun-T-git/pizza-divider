@@ -49,8 +49,15 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
     
     setIsCapturing(true);
     try {
-      const imageFile = await captureImage();
+      // ガイド枠の比率（0.7）を渡して、枠内のみをキャプチャ
+      const imageFile = await captureImage(0.7);
       if (imageFile) {
+        // デバッグ: 画像が正方形であることを確認
+        console.log('Captured image:', {
+          name: imageFile.name,
+          size: imageFile.size,
+          type: imageFile.type
+        });
         onCapture(imageFile);
       }
     } catch (err) {
