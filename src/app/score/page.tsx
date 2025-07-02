@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { calculateScore, saveScore, generateUUID } from '@/utils/apiClient';
+import { calculateScore, saveScore, generateUUID, userApi } from '@/utils/apiClient';
 
 export default function ScorePage() {
   const router = useRouter();
@@ -72,7 +72,22 @@ export default function ScorePage() {
     setIsSaving(true);
     try {
       const uuid = generateUUID();
+      
+      // 既存のスコア保存API（スタブ）
       await saveScore(accountName, uuid, score);
+      
+      // 新しいユーザー記録API（エラーが起きてもアプリを継続）
+      try {
+        await userApi.createUserRecord({
+          account: accountName,
+          score: score
+        });
+        console.log('User record saved successfully');
+      } catch (userApiError) {
+        console.warn('Failed to save user record, but continuing:', userApiError);
+        // ユーザー記録の保存に失敗してもアプリは継続
+      }
+      
       setIsSaved(true);
       
       // 結果をlocalStorageに保存
