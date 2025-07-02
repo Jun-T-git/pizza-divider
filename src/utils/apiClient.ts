@@ -216,3 +216,52 @@ export const generateUUID = (): string => {
     return v.toString(16);
   });
 };
+
+// ユーザー登録API
+export const userApi = {
+  async createUserRecord(data: {
+    account: string;
+    score: number;
+  }) {
+    console.log('Attempting to create user record:', data);
+    console.log('API_BASE_URL:', API_BASE_URL);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/user-records/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          account: data.account,
+          score: data.score
+        })
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error response:', errorText);
+        throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('User record created successfully:', result);
+      return result;
+    } catch (error) {
+      console.error('User record creation error:', error);
+      
+      // ネットワークエラーの場合の詳細情報
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error('Network error - please check:');
+        console.error('1. Backend server is running on', API_BASE_URL);
+        console.error('2. CORS is properly configured');
+        console.error('3. Endpoint /api/user-records/ exists');
+      }
+      
+      throw error;
+    }
+  }
+};
