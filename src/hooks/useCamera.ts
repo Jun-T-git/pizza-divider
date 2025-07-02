@@ -11,6 +11,7 @@ interface UseCameraReturn {
   startCamera: () => Promise<void>;
   stopCamera: () => void;
   captureImage: (guideRatio?: number) => Promise<File | null>;
+  setVideoElement?: (element: HTMLVideoElement | null) => void;
 }
 
 export const useCamera = (): UseCameraReturn => {
@@ -21,6 +22,48 @@ export const useCamera = (): UseCameraReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isStreamActive, setIsStreamActive] = useState(false);
+
+  // ストリームを取得後、video要素に設定する関数
+  const setStreamToVideo = useCallback(() => {
+    if (streamRef.current && videoRef.current && !videoRef.current.srcObject) {
+      videoRef.current.srcObject = streamRef.current;
+      
+      // ビデオ要素の状態に応じて再生を開始
+      if (videoRef.current.readyState >= 1) {
+        videoRef.current.play().then(() => {
+          setIsStreamActive(true);
+        }).catch((err) => {
+          console.error('Video play() failed:', err);
+        });
+      } else {
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().then(() => {
+            setIsStreamActive(true);
+          }).catch((err) => {
+            console.error('Video play() failed:', err);
+          });
+        };
+      }
+    }
+  }, []);
+
+  // video要素が変更されたときに、保存されたストリームを設定
+  useEffect(() => {
+    // ストリームが保存されていて、video要素がまだ設定されていない場合
+    const checkAndSetStream = () => {
+      if (streamRef.current && videoRef.current && !videoRef.current.srcObject) {
+        setStreamToVideo();
+      }
+    };
+
+    // 初回チェック
+    checkAndSetStream();
+
+    // 念のため少し後にも再チェック
+    const timer = setTimeout(checkAndSetStream, 200);
+    
+    return () => clearTimeout(timer);
+  }, [setStreamToVideo]);
 
   const startCamera = useCallback(async () => {
     setIsLoading(true);
@@ -70,9 +113,11 @@ export const useCamera = (): UseCameraReturn => {
       }
     ];
 
+    // videoRef.currentがnullの場合の処理を削除
+    // 元の実装では、ここでvideoRef.currentのチェックをしていた
+
     for (let i = 0; i < constraints.length; i++) {
       try {
-        console.log(`Trying camera constraint ${i + 1}:`, constraints[i]);
         
         const stream = await navigator.mediaDevices.getUserMedia(constraints[i]);
         streamRef.current = stream;
@@ -86,37 +131,54 @@ export const useCamera = (): UseCameraReturn => {
               reject(new Error('Video loading timeout'));
             }, 10000); // 10秒タイムアウト
 
-            videoRef.current!.onloadedmetadata = () => {
-              clearTimeout(timeout);
-              videoRef.current?.play().then(() => {
+            
+            // ビデオ要素の現在の状態をチェック
+            if (videoRef.current!.readyState >= 1) {
+              // 既にメタデータがロードされている場合
+              videoRef.current!.play().then(() => {
                 setIsStreamActive(true);
+                clearTimeout(timeout);
                 resolve();
-              }).catch(reject);
-            };
+              }).catch((err) => {
+                console.error('Video play() failed:', err);
+                clearTimeout(timeout);
+                reject(err);
+              });
+            } else {
+              // メタデータのロードを待つ
+              videoRef.current!.onloadedmetadata = () => {
+                clearTimeout(timeout);
+                videoRef.current?.play().then(() => {
+                  setIsStreamActive(true);
+                  resolve();
+                }).catch((err) => {
+                  console.error('[useCamera] Video play() failed after metadata:', err);
+                  reject(err);
+                });
+              };
+            }
 
-            videoRef.current!.onerror = () => {
+            videoRef.current!.onerror = (e) => {
+              console.error('Video error event:', e);
               clearTimeout(timeout);
               reject(new Error('Video loading error'));
             };
           });
 
           await videoLoaded;
-          console.log('Camera started successfully with constraint:', i + 1);
           break; // 成功したら終了
+        } else {
+          // video要素がない場合は、ストリームを保存しておき、後でsetStreamToVideoで設定
+          setIsLoading(false);
+          return;
         }
       } catch (err) {
-        console.error(`Camera constraint ${i + 1} failed:`, err);
         
         // 最後の試行でも失敗した場合
         if (i === constraints.length - 1) {
           let errorMessage = 'カメラにアクセスできませんでした';
           
           if (err instanceof Error) {
-            console.error('Final camera error:', {
-              name: err.name,
-              message: err.message,
-              stack: err.stack
-            });
 
             if (err.name === 'NotAllowedError') {
               errorMessage = 'カメラへのアクセスが拒否されました。ブラウザの設定でカメラの使用を許可してください。';
@@ -211,14 +273,6 @@ export const useCamera = (): UseCameraReturn => {
     const guideX = (displayWidth - guideSize) / 2;
     const guideY = (displayHeight - guideSize) / 2;
     
-    console.log('Capture info:', {
-      displayWidth,
-      displayHeight,
-      guideSize,
-      guideX,
-      guideY,
-      guideRatio
-    });
     
     // 最終的な出力キャンバスにガイド枠内のみを描画
     const outputSize = 800;
@@ -252,13 +306,12 @@ export const useCamera = (): UseCameraReturn => {
       if ('permissions' in navigator) {
         try {
           const result = await navigator.permissions.query({ name: 'camera' as PermissionName });
-          console.log('Camera permission status:', result.state);
           
           if (result.state === 'denied') {
             setError('カメラへのアクセスが拒否されています。ブラウザの設定で許可してください。');
           }
-        } catch (err) {
-          console.log('Permission API not supported or failed:', err);
+        } catch {
+          // Permission APIがサポートされていない場合は無視
         }
       }
     };
