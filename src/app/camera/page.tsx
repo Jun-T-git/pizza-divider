@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { CameraCapture } from '@/components/CameraCapture';
+import { CameraCaptureSimple } from '@/components/CameraCaptureSimple';
 
 export default function CameraPage() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function CameraPage() {
 
   return (
     <div>
-      <CameraCapture onCapture={handleCapture} onError={handleError} />
+      <CameraCaptureSimple onCapture={handleCapture} onError={handleError} />
     </div>
   );
 }

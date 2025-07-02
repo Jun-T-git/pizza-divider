@@ -3,14 +3,16 @@
 interface CircleGuideProps {
   containerWidth: number;
   containerHeight: number;
+  guideRatio?: number;
 }
 
 export const CircleGuide: React.FC<CircleGuideProps> = ({ 
   containerWidth, 
-  containerHeight 
+  containerHeight,
+  guideRatio = 0.7
 }) => {
   // 正方形のサイズを計算
-  const squareSize = Math.min(containerWidth, containerHeight) * 0.7;
+  const squareSize = Math.min(containerWidth, containerHeight) * guideRatio;
   const centerX = containerWidth / 2;
   const centerY = containerHeight / 2;
   const circleRadius = squareSize / 2;
