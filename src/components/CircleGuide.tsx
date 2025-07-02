@@ -1,5 +1,7 @@
 'use client';
 
+import { PreciseCameraGuideManager } from '@/utils/preciseCameraGuide';
+
 interface CircleGuideProps {
   containerWidth: number;
   containerHeight: number;
@@ -11,8 +13,15 @@ export const CircleGuide: React.FC<CircleGuideProps> = ({
   containerHeight,
   guideRatio = 0.7
 }) => {
-  // 正方形のサイズを計算
-  const squareSize = Math.min(containerWidth, containerHeight) * guideRatio;
+  const preciseGuideManager = new PreciseCameraGuideManager(guideRatio);
+  const displayGuide = preciseGuideManager.calculateDisplayGuide({ 
+    width: containerWidth, 
+    height: containerHeight 
+  });
+  
+  const squareX = displayGuide.x;
+  const squareY = displayGuide.y;
+  const squareSize = displayGuide.width;
   const centerX = containerWidth / 2;
   const centerY = containerHeight / 2;
   const circleRadius = squareSize / 2;
@@ -29,8 +38,8 @@ export const CircleGuide: React.FC<CircleGuideProps> = ({
           <mask id="squareMask">
             <rect width="100%" height="100%" fill="white" />
             <rect
-              x={centerX - squareSize / 2}
-              y={centerY - squareSize / 2}
+              x={squareX}
+              y={squareY}
               width={squareSize}
               height={squareSize}
               fill="black"
@@ -48,8 +57,8 @@ export const CircleGuide: React.FC<CircleGuideProps> = ({
         
         {/* 正方形の枠（撮影範囲） */}
         <rect
-          x={centerX - squareSize / 2}
-          y={centerY - squareSize / 2}
+          x={squareX}
+          y={squareY}
           width={squareSize}
           height={squareSize}
           fill="none"
@@ -73,7 +82,7 @@ export const CircleGuide: React.FC<CircleGuideProps> = ({
       <div 
         className="absolute bg-black bg-opacity-60 text-white text-sm px-4 py-2 rounded-lg"
         style={{
-          top: centerY - squareSize / 2 - 50,
+          top: squareY - 50,
           left: centerX - 120,
           width: 240,
           textAlign: 'center'

@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import { CircleGuide } from "@/components/CircleGuide";
+import { PreciseCameraGuideManager } from "@/utils/preciseCameraGuide";
 import type { CameraProps } from "@/types";
 
 export const CameraCaptureSimple: React.FC<CameraProps> = ({
@@ -12,6 +13,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
   const webcamRef = useRef<Webcam>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const preciseGuideManager = new PreciseCameraGuideManager();
 
   useEffect(() => {
     const handleResize = () => {
@@ -27,7 +29,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
   }, []);
 
   const handleCapture = async () => {
-    if (!webcamRef.current || isCapturing) return;
+    if (!webcamRef.current || isCapturing || dimensions.width === 0) return;
 
     setIsCapturing(true);
     try {
@@ -37,14 +39,57 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
         return;
       }
 
-      const response = await fetch(screenshot);
-      const blob = await response.blob();
-      const file = new File([blob], `pizza-${Date.now()}.jpg`, {
-        type: 'image/jpeg',
-        lastModified: Date.now(),
+      // ビデオ要素から自然なサイズを取得
+      const videoElement = webcamRef.current.video;
+      if (!videoElement) {
+        onError?.("ビデオ要素にアクセスできませんでした。");
+        return;
+      }
+
+      const naturalVideoSize = {
+        width: videoElement.videoWidth,
+        height: videoElement.videoHeight
+      };
+
+      // スクリーンショット画像のサイズを取得
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+        img.src = screenshot;
       });
 
-      onCapture(file);
+      const screenshotSize = {
+        width: img.width,
+        height: img.height
+      };
+
+      // 精密な座標変換を実行
+      const cropData = preciseGuideManager.calculatePreciseCrop(
+        dimensions,
+        naturalVideoSize,
+        screenshotSize
+      );
+
+      console.log('PreciseCameraGuide calculation:', {
+        viewport: dimensions,
+        naturalVideo: naturalVideoSize,
+        screenshot: screenshotSize,
+        cropData
+      });
+
+      if (!cropData.isValid) {
+        onError?.("トリミング領域が無効です。");
+        return;
+      }
+
+      const croppedFile = await preciseGuideManager.cropImagePrecise(screenshot, cropData);
+      if (!croppedFile) {
+        onError?.("画像の処理に失敗しました。");
+        return;
+      }
+
+      onCapture(croppedFile);
     } catch (error) {
       console.error("Capture error:", error);
       onError?.("撮影に失敗しました。");
@@ -52,6 +97,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
       setIsCapturing(false);
     }
   };
+
 
   return (
     <div className="relative h-screen bg-black overflow-hidden">
