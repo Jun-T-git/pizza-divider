@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useCamera } from '@/hooks/useCamera';
-import { CircleGuide } from './CircleGuide';
-import { CameraProps } from '@/types';
+import { useCamera } from "@/hooks/useCamera";
+import { CameraProps } from "@/types";
+import { useEffect, useState } from "react";
+import { CircleGuide } from "./CircleGuide";
 
-export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => {
+export const CameraCapture: React.FC<CameraProps> = ({
+  onCapture,
+  onError,
+}) => {
   const {
     videoRef,
     canvasRef,
@@ -14,7 +17,7 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
     isStreamActive,
     startCamera,
     stopCamera,
-    captureImage
+    captureImage,
   } = useCamera();
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -22,7 +25,9 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
 
   useEffect(() => {
     startCamera();
-    return () => stopCamera();
+    return () => {
+      stopCamera();
+    };
   }, [startCamera, stopCamera]);
 
   useEffect(() => {
@@ -35,35 +40,29 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
     const handleResize = () => {
       setDimensions({
         width: window.innerWidth,
-        height: window.innerHeight - 200
+        height: window.innerHeight - 200,
       });
     };
 
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleCapture = async () => {
     if (isCapturing) return;
-    
+
     setIsCapturing(true);
     try {
       // ガイド枠の比率（0.7）を渡して、枠内のみをキャプチャ
       const imageFile = await captureImage(0.7);
       if (imageFile) {
-        // デバッグ: 画像が正方形であることを確認
-        console.log('Captured image:', {
-          name: imageFile.name,
-          size: imageFile.size,
-          type: imageFile.type
-        });
         onCapture(imageFile);
       }
     } catch (err) {
-      console.error('Capture error:', err);
+      console.error("Capture error:", err);
       if (onError) {
-        onError('撮影に失敗しました');
+        onError("撮影に失敗しました");
       }
     } finally {
       setIsCapturing(false);
@@ -88,7 +87,7 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
           <div className="text-red-400 text-6xl mb-4">📷</div>
           <h2 className="text-white text-xl font-bold mb-4">カメラエラー</h2>
           <p className="text-white mb-6 leading-relaxed">{error}</p>
-          
+
           <div className="space-y-4">
             <button
               onClick={startCamera}
@@ -96,9 +95,11 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
             >
               再試行
             </button>
-            
+
             <div className="text-left bg-gray-800 p-4 rounded-lg text-sm">
-              <h3 className="text-orange-400 font-semibold mb-2">トラブルシューティング:</h3>
+              <h3 className="text-orange-400 font-semibold mb-2">
+                トラブルシューティング:
+              </h3>
               <ul className="text-gray-300 space-y-1 text-xs">
                 <li>• ブラウザでカメラの使用を許可してください</li>
                 <li>• HTTPS接続を確認してください</li>
@@ -107,10 +108,12 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
                 <li>• デバイスにカメラが接続されているか確認</li>
               </ul>
             </div>
-            
+
             <div className="text-xs text-gray-400">
-              URL: {window.location.href}<br/>
-              HTTPS: {window.location.protocol === 'https:' ? '✅' : '❌'}<br/>
+              URL: {window.location.href}
+              <br />
+              HTTPS: {window.location.protocol === "https:" ? "✅" : "❌"}
+              <br />
               UserAgent: {navigator.userAgent.slice(0, 50)}...
             </div>
           </div>
@@ -128,13 +131,13 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
           playsInline
           muted
           className="w-full h-full object-cover"
-          style={{ transform: 'scaleX(-1)' }}
+          style={{ transform: "scaleX(-1)" }}
         />
-        
+
         {isStreamActive && dimensions.width > 0 && (
-          <CircleGuide 
-            containerWidth={dimensions.width} 
-            containerHeight={dimensions.height} 
+          <CircleGuide
+            containerWidth={dimensions.width}
+            containerHeight={dimensions.height}
           />
         )}
       </div>
@@ -146,9 +149,10 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
             disabled={!isStreamActive || isCapturing}
             className={`
               w-20 h-20 rounded-full border-4 border-white
-              ${isStreamActive && !isCapturing
-                ? 'bg-orange-500 hover:bg-orange-600 active:scale-95' 
-                : 'bg-gray-500 cursor-not-allowed'
+              ${
+                isStreamActive && !isCapturing
+                  ? "bg-orange-500 hover:bg-orange-600 active:scale-95"
+                  : "bg-gray-500 cursor-not-allowed"
               }
               transition-all duration-200 flex items-center justify-center
             `}
@@ -160,16 +164,13 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
             )}
           </button>
         </div>
-        
+
         <p className="text-white text-center mt-4 text-sm">
-          {isCapturing ? '撮影中...' : 'タップして撮影'}
+          {isCapturing ? "撮影中..." : "タップして撮影"}
         </p>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        className="hidden"
-      />
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 };
