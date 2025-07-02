@@ -22,13 +22,49 @@ export const CameraCapture: React.FC<CameraProps> = ({
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isCapturing, setIsCapturing] = useState(false);
+  // デバッグ情報表示用の状態
+  const [showDebug, setShowDebug] = useState(false);
+  const [videoInfo, setVideoInfo] = useState({
+    readyState: 0,
+    videoWidth: 0,
+    videoHeight: 0,
+    hasStream: false,
+  });
 
   useEffect(() => {
     startCamera();
+
+    // デバッグ用: ダブルタップで情報を表示
+    const handleDoubleClick = () => {
+      setShowDebug((prev) => !prev);
+    };
+
+    document.addEventListener("dblclick", handleDoubleClick);
+
     return () => {
       stopCamera();
+      document.removeEventListener("dblclick", handleDoubleClick);
     };
   }, [startCamera, stopCamera]);
+
+  // デバッグ情報の更新
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    const updateVideoInfo = () => {
+      if (videoRef.current) {
+        setVideoInfo({
+          readyState: videoRef.current.readyState,
+          videoWidth: videoRef.current.videoWidth,
+          videoHeight: videoRef.current.videoHeight,
+          hasStream: videoRef.current.srcObject !== null,
+        });
+      }
+    };
+
+    const timer = setInterval(updateVideoInfo, 1000);
+    return () => clearInterval(timer);
+  }, [videoRef]);
 
   useEffect(() => {
     if (error && onError) {
@@ -67,6 +103,13 @@ export const CameraCapture: React.FC<CameraProps> = ({
     } finally {
       setIsCapturing(false);
     }
+  };
+
+  const handleRestartCamera = () => {
+    stopCamera();
+    setTimeout(() => {
+      startCamera();
+    }, 500);
   };
 
   if (isLoading) {
@@ -139,6 +182,24 @@ export const CameraCapture: React.FC<CameraProps> = ({
             containerWidth={dimensions.width}
             containerHeight={dimensions.height}
           />
+        )}
+
+        {/* デバッグ情報 */}
+        {showDebug && (
+          <div className="absolute top-0 left-0 bg-black bg-opacity-70 text-white p-3 text-xs z-50 w-full">
+            <p>ストリーム: {videoInfo.hasStream ? "あり" : "なし"}</p>
+            <p>readyState: {videoInfo.readyState}</p>
+            <p>
+              解像度: {videoInfo.videoWidth}x{videoInfo.videoHeight}
+            </p>
+            <p>isStreamActive: {isStreamActive ? "true" : "false"}</p>
+            <button
+              onClick={handleRestartCamera}
+              className="mt-2 bg-red-600 text-white px-2 py-1 rounded text-xs"
+            >
+              カメラ再起動
+            </button>
+          </div>
         )}
       </div>
 

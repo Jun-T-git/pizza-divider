@@ -26,22 +26,41 @@ export const useCamera = (): UseCameraReturn => {
   // ストリームを取得後、video要素に設定する関数
   const setStreamToVideo = useCallback(() => {
     if (streamRef.current && videoRef.current && !videoRef.current.srcObject) {
+      console.log('[useCamera] Setting stream to video');
+      
+      // 重要: iOS Safariでは必ずmuted=trueに設定する必要がある
+      if (videoRef.current) {
+        videoRef.current.muted = true;
+        videoRef.current.setAttribute('playsinline', '');
+        videoRef.current.setAttribute('autoplay', '');
+      }
+      
       videoRef.current.srcObject = streamRef.current;
       
       // ビデオ要素の状態に応じて再生を開始
       if (videoRef.current.readyState >= 1) {
-        videoRef.current.play().then(() => {
-          setIsStreamActive(true);
-        }).catch((err) => {
-          console.error('Video play() failed:', err);
-        });
-      } else {
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().then(() => {
+        console.log('[useCamera] Video element ready, playing');
+        videoRef.current.play()
+          .then(() => {
+            console.log('[useCamera] Video playback started successfully');
             setIsStreamActive(true);
-          }).catch((err) => {
-            console.error('Video play() failed:', err);
+          })
+          .catch((err) => {
+            console.error('[useCamera] Video play() failed:', err);
           });
+      } else {
+        console.log('[useCamera] Waiting for loadedmetadata event');
+        videoRef.current.onloadedmetadata = () => {
+          if (!videoRef.current) return;
+          console.log('[useCamera] Metadata loaded, playing video');
+          videoRef.current.play()
+            .then(() => {
+              console.log('[useCamera] Video playback started after metadata');
+              setIsStreamActive(true);
+            })
+            .catch((err) => {
+              console.error('[useCamera] Video play() failed after metadata:', err);
+            });
         };
       }
     }
@@ -52,6 +71,7 @@ export const useCamera = (): UseCameraReturn => {
     // ストリームが保存されていて、video要素がまだ設定されていない場合
     const checkAndSetStream = () => {
       if (streamRef.current && videoRef.current && !videoRef.current.srcObject) {
+        console.log('[useCamera] Video ref changed, setting stream');
         setStreamToVideo();
       }
     };
@@ -59,13 +79,14 @@ export const useCamera = (): UseCameraReturn => {
     // 初回チェック
     checkAndSetStream();
 
-    // 念のため少し後にも再チェック
-    const timer = setTimeout(checkAndSetStream, 200);
+    // 念のため少し後にも再チェック (iOS Safariでの信頼性向上)
+    const timer = setTimeout(checkAndSetStream, 300);
     
     return () => clearTimeout(timer);
   }, [setStreamToVideo]);
 
   const startCamera = useCallback(async () => {
+    console.log('[useCamera] Starting camera');
     setIsLoading(true);
     setError(null);
 
@@ -83,24 +104,25 @@ export const useCamera = (): UseCameraReturn => {
       return;
     }
 
+    // 順番に試す制約の配列
     const constraints = [
-      // 最初は理想的な設定を試す
+      // より基本的な設定 (フロントカメラから試む - 多くのモバイルではこれが望ましい)
       {
         video: {
-          facingMode: 'environment',
-          width: { ideal: 1920, max: 1920 },
-          height: { ideal: 1080, max: 1080 }
-        }
-      },
-      // フォールバック: より基本的な設定
-      {
-        video: {
-          facingMode: 'environment',
+          facingMode: "user", // フロントカメラから試む
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
       },
-      // 最終フォールバック: 最も基本的な設定
+      // 次に背面カメラを試む
+      {
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      },
+      // より制約の少ない設定
       {
         video: {
           width: { ideal: 640 },
@@ -113,16 +135,29 @@ export const useCamera = (): UseCameraReturn => {
       }
     ];
 
-    // videoRef.currentがnullの場合の処理を削除
-    // 元の実装では、ここでvideoRef.currentのチェックをしていた
+    // 以前のストリームが存在すれば停止
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      streamRef.current = null;
+    }
 
+    // 各制約を順番に試す
     for (let i = 0; i < constraints.length; i++) {
       try {
-        
+        console.log(`[useCamera] Trying camera constraints option ${i+1}`, constraints[i]);
         const stream = await navigator.mediaDevices.getUserMedia(constraints[i]);
         streamRef.current = stream;
+        console.log('[useCamera] Camera stream obtained successfully');
 
         if (videoRef.current) {
+          console.log('[useCamera] Video element exists, configuring it');
+          // iOS Safariでの再生を確実にするための設定
+          videoRef.current.muted = true;
+          videoRef.current.setAttribute('playsinline', '');
+          videoRef.current.setAttribute('autoplay', '');
+          
           videoRef.current.srcObject = stream;
           
           // Promise化してタイムアウトを設定
@@ -131,24 +166,29 @@ export const useCamera = (): UseCameraReturn => {
               reject(new Error('Video loading timeout'));
             }, 10000); // 10秒タイムアウト
 
-            
             // ビデオ要素の現在の状態をチェック
-            if (videoRef.current!.readyState >= 1) {
+            if (videoRef.current && videoRef.current.readyState >= 1) {
               // 既にメタデータがロードされている場合
-              videoRef.current!.play().then(() => {
+              videoRef.current.play().then(() => {
+                console.log('[useCamera] Video playback started immediately');
                 setIsStreamActive(true);
                 clearTimeout(timeout);
                 resolve();
               }).catch((err) => {
-                console.error('Video play() failed:', err);
+                console.error('[useCamera] Video play() failed:', err);
                 clearTimeout(timeout);
                 reject(err);
               });
-            } else {
+            } else if (videoRef.current) {
               // メタデータのロードを待つ
-              videoRef.current!.onloadedmetadata = () => {
+              console.log('[useCamera] Waiting for video metadata to load');
+              videoRef.current.onloadedmetadata = () => {
+                if (!videoRef.current) return;
+                
                 clearTimeout(timeout);
-                videoRef.current?.play().then(() => {
+                console.log('[useCamera] Video metadata loaded, attempting to play');
+                videoRef.current.play().then(() => {
+                  console.log('[useCamera] Video playback started after metadata');
                   setIsStreamActive(true);
                   resolve();
                 }).catch((err) => {
@@ -158,27 +198,44 @@ export const useCamera = (): UseCameraReturn => {
               };
             }
 
-            videoRef.current!.onerror = (e) => {
-              console.error('Video error event:', e);
-              clearTimeout(timeout);
-              reject(new Error('Video loading error'));
-            };
+            if (videoRef.current) {
+              videoRef.current.onerror = (e) => {
+                console.error('[useCamera] Video error event:', e);
+                clearTimeout(timeout);
+                reject(new Error('Video loading error'));
+              };
+            }
           });
 
-          await videoLoaded;
-          break; // 成功したら終了
+          try {
+            await videoLoaded;
+            break; // 成功したら終了
+          } catch (err) {
+            console.warn(`[useCamera] Failed to start video with constraints option ${i+1}:`, err);
+            // 次の制約を試す前に現在のストリームを停止
+            if (streamRef.current) {
+              streamRef.current.getTracks().forEach(track => track.stop());
+              streamRef.current = null;
+            }
+            // 最後の制約でなければ次を試す
+            if (i < constraints.length - 1) continue;
+            throw err;
+          }
         } else {
           // video要素がない場合は、ストリームを保存しておき、後でsetStreamToVideoで設定
+          console.log('[useCamera] No video element yet, storing stream for later');
           setIsLoading(false);
           return;
         }
       } catch (err) {
+        console.warn(`[useCamera] getUserMedia failed with constraints option ${i+1}:`, err);
         
         // 最後の試行でも失敗した場合
         if (i === constraints.length - 1) {
           let errorMessage = 'カメラにアクセスできませんでした';
           
           if (err instanceof Error) {
+            console.error('[useCamera] Final camera access attempt failed:', err);
 
             if (err.name === 'NotAllowedError') {
               errorMessage = 'カメラへのアクセスが拒否されました。ブラウザの設定でカメラの使用を許可してください。';
@@ -210,6 +267,7 @@ export const useCamera = (): UseCameraReturn => {
   }, []);
 
   const stopCamera = useCallback(() => {
+    console.log('[useCamera] Stopping camera');
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -250,6 +308,9 @@ export const useCamera = (): UseCameraReturn => {
     // ビデオの実際の解像度
     const videoWidth = video.videoWidth;
     const videoHeight = video.videoHeight;
+    
+    console.log('[useCamera] Video dimensions:', videoWidth, 'x', videoHeight);
+    console.log('[useCamera] Display dimensions:', displayWidth, 'x', displayHeight);
     
     // object-coverの挙動を再現
     const scale = Math.max(displayWidth / videoWidth, displayHeight / videoHeight);
@@ -312,6 +373,7 @@ export const useCamera = (): UseCameraReturn => {
           }
         } catch {
           // Permission APIがサポートされていない場合は無視
+          console.log('[useCamera] Permissions API not supported');
         }
       }
     };

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カメラテスト</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #444;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            margin: 20px 0;
+            overflow: hidden;
+            background-color: #000;
+            border-radius: 8px;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            background-color: #ff6b35;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #e55a2b;
+        }
+        .debug {
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        .camera-options {
+            margin-bottom: 15px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-top: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>カメラテスト</h1>
+        
+        <div class="camera-options">
+            <label for="cameraSelect">カメラを選択:</label>
+            <select id="cameraSelect"></select>
+        </div>
+        
+        <div class="video-container">
+            <video id="video" autoplay playsinline muted></video>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">カメラ起動</button>
+            <button id="switchBtn" disabled>前面/背面カメラ切替</button>
+        </div>
+        
+        <div class="debug" id="debug">
+            デバッグ情報がここに表示されます
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const startBtn = document.getElementById('startBtn');
+        const switchBtn = document.getElementById('switchBtn');
+        const debug = document.getElementById('debug');
+        const cameraSelect = document.getElementById('cameraSelect');
+        
+        let currentStream = null;
+        let cameras = [];
+        let currentCamera = 0;
+        
+        // 利用可能なカメラデバイスを列挙
+        async function listCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                cameras = devices.filter(device => device.kind === 'videoinput');
+                
+                // セレクトボックスをクリア
+                cameraSelect.innerHTML = '';
+                
+                // オプションを追加
+                cameras.forEach((camera, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.text = camera.label || `カメラ ${index + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+                
+                updateDebugInfo();
+            } catch (err) {
+                showError(`カメラデバイスの列挙に失敗: ${err.message}`);
+            }
+        }
+        
+        // 選択したカメラを開始
+        async function startCamera(cameraIndex = 0) {
+            stopCamera();
+            
+            try {
+                const constraints = {
+                    video: cameras.length > 0 ? 
+                        { deviceId: { exact: cameras[cameraIndex].deviceId } } : 
+                        true
+                };
+                
+                showDebug('カメラを起動中...');
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                video.srcObject = currentStream;
+                
+                // iOS Safari対応の明示的な属性設定
+                video.setAttribute('autoplay', '');
+                video.setAttribute('playsinline', '');
+                video.setAttribute('muted', '');
+                
+                video.onloadedmetadata = () => {
+                    video.play()
+                        .then(() => {
+                            showDebug('ビデオ再生開始');
+                            switchBtn.disabled = cameras.length <= 1;
+                            currentCamera = cameraIndex;
+                            updateDebugInfo();
+                        })
+                        .catch(err => {
+                            showError(`ビデオ再生失敗: ${err.message}`);
+                        });
+                };
+                
+                // ストリームのトラック情報を表示
+                showStreamInfo(currentStream);
+                
+            } catch (err) {
+                showError(`カメラアクセスエラー: ${err.name} - ${err.message}`);
+            }
+        }
+        
+        // カメラを停止
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+                video.srcObject = null;
+            }
+        }
+        
+        // カメラを切り替え
+        function switchCamera() {
+            if (cameras.length <= 1) return;
+            
+            const nextCamera = (currentCamera + 1) % cameras.length;
+            startCamera(nextCamera);
+        }
+        
+        // ストリーム情報を表示
+        function showStreamInfo(stream) {
+            if (!stream) return;
+            
+            const tracks = stream.getVideoTracks();
+            let trackInfo = '';
+            
+            tracks.forEach((track, index) => {
+                trackInfo += `\nトラック ${index+1}:\n`;
+                trackInfo += `  有効: ${track.enabled}\n`;
+                trackInfo += `  ID: ${track.id}\n`;
+                trackInfo += `  ラベル: ${track.label}\n`;
+                trackInfo += `  設定: ${JSON.stringify(track.getSettings(), null, 2)}\n`;
+            });
+            
+            showDebug(`ストリーム取得成功!\nトラック数: ${tracks.length}${trackInfo}`);
+        }
+        
+        // デバッグ情報を更新
+        function updateDebugInfo() {
+            let info = `利用可能なカメラ: ${cameras.length}\n`;
+            info += `HTTPS接続: ${location.protocol === 'https:' ? '✅' : '❌'}\n`;
+            info += `ユーザーエージェント: ${navigator.userAgent}\n`;
+            
+            if (video.srcObject) {
+                info += `\nビデオ状態:\n`;
+                info += `  再生状態: ${video.paused ? '停止中' : '再生中'}\n`;
+                info += `  readyState: ${video.readyState}\n`;
+                info += `  サイズ: ${video.videoWidth}x${video.videoHeight}\n`;
+            }
+            
+            debug.textContent = info;
+        }
+        
+        // エラーを表示
+        function showError(message) {
+            console.error(message);
+            debug.textContent = `エラー: ${message}`;
+            debug.style.color = 'red';
+        }
+        
+        // デバッグ情報を表示
+        function showDebug(message) {
+            console.log(message);
+            debug.textContent = message;
+            debug.style.color = 'black';
+        }
+        
+        // 定期的にビデオ状態を更新
+        setInterval(() => {
+            if (video.srcObject) {
+                updateDebugInfo();
+            }
+        }, 1000);
+        
+        // イベントリスナーの設定
+        startBtn.addEventListener('click', () => {
+            const selectedIndex = parseInt(cameraSelect.value);
+            startCamera(selectedIndex);
+        });
+        
+        switchBtn.addEventListener('click', switchCamera);
+        
+        cameraSelect.addEventListener('change', () => {
+            // カメラが既に起動している場合は切り替える
+            if (currentStream) {
+                const selectedIndex = parseInt(cameraSelect.value);
+                startCamera(selectedIndex);
+            }
+        });
+        
+        // 初期化
+        async function init() {
+            try {
+                // カメラ許可を取得するためにまず1回getUserMediaを呼び出す
+                const initialStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                initialStream.getTracks().forEach(track => track.stop());
+                
+                // カメラ一覧を取得
+                await listCameras();
+                
+                if (cameras.length === 0) {
+                    showError('利用可能なカメラが見つかりませんでした');
+                } else {
+                    showDebug(`${cameras.length}台のカメラが見つかりました。「カメラ起動」ボタンを押してください。`);
+                }
+            } catch (err) {
+                showError(`初期化エラー: ${err.message}`);
+            }
+        }
+        
+        // ページ読み込み時に初期化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
