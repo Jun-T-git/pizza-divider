@@ -26,43 +26,125 @@ export const useCamera = (): UseCameraReturn => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const constraints = {
+    // HTTPS接続チェック
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      setError('カメラ機能はHTTPS接続が必要です。');
+      setIsLoading(false);
+      return;
+    }
+
+    // MediaDevices API対応チェック
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError('このブラウザはカメラ機能に対応していません。');
+      setIsLoading(false);
+      return;
+    }
+
+    const constraints = [
+      // 最初は理想的な設定を試す
+      {
         video: {
           facingMode: 'environment',
           width: { ideal: 1920, max: 1920 },
           height: { ideal: 1080, max: 1080 }
         }
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
-          setIsStreamActive(true);
-        };
+      },
+      // フォールバック: より基本的な設定
+      {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      },
+      // 最終フォールバック: 最も基本的な設定
+      {
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        }
+      },
+      // 最後の手段: 設定なし
+      {
+        video: true
       }
-    } catch (err) {
-      let errorMessage = 'カメラにアクセスできませんでした';
-      
-      if (err instanceof Error) {
-        if (err.name === 'NotAllowedError') {
-          errorMessage = 'カメラへのアクセスが拒否されました。ブラウザの設定を確認してください。';
-        } else if (err.name === 'NotFoundError') {
-          errorMessage = 'カメラが見つかりません。デバイスにカメラが接続されているか確認してください。';
-        } else if (err.name === 'NotReadableError') {
-          errorMessage = 'カメラが他のアプリケーションで使用されている可能性があります。';
+    ];
+
+    for (let i = 0; i < constraints.length; i++) {
+      try {
+        console.log(`Trying camera constraint ${i + 1}:`, constraints[i]);
+        
+        const stream = await navigator.mediaDevices.getUserMedia(constraints[i]);
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          
+          // Promise化してタイムアウトを設定
+          const videoLoaded = new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Video loading timeout'));
+            }, 10000); // 10秒タイムアウト
+
+            videoRef.current!.onloadedmetadata = () => {
+              clearTimeout(timeout);
+              videoRef.current?.play().then(() => {
+                setIsStreamActive(true);
+                resolve();
+              }).catch(reject);
+            };
+
+            videoRef.current!.onerror = () => {
+              clearTimeout(timeout);
+              reject(new Error('Video loading error'));
+            };
+          });
+
+          await videoLoaded;
+          console.log('Camera started successfully with constraint:', i + 1);
+          break; // 成功したら終了
+        }
+      } catch (err) {
+        console.error(`Camera constraint ${i + 1} failed:`, err);
+        
+        // 最後の試行でも失敗した場合
+        if (i === constraints.length - 1) {
+          let errorMessage = 'カメラにアクセスできませんでした';
+          
+          if (err instanceof Error) {
+            console.error('Final camera error:', {
+              name: err.name,
+              message: err.message,
+              stack: err.stack
+            });
+
+            if (err.name === 'NotAllowedError') {
+              errorMessage = 'カメラへのアクセスが拒否されました。ブラウザの設定でカメラの使用を許可してください。';
+            } else if (err.name === 'NotFoundError') {
+              errorMessage = 'カメラが見つかりません。デバイスにカメラが接続されているか確認してください。';
+            } else if (err.name === 'NotReadableError') {
+              errorMessage = 'カメラが他のアプリケーションで使用されている可能性があります。';
+            } else if (err.name === 'OverconstrainedError') {
+              errorMessage = 'カメラの設定に問題があります。別のカメラを試してください。';
+            } else if (err.name === 'NotSupportedError') {
+              errorMessage = 'このデバイスのカメラはサポートされていません。';
+            } else if (err.message === 'Video loading timeout') {
+              errorMessage = 'カメラの起動がタイムアウトしました。ページを再読み込みして再試行してください。';
+            }
+          }
+          
+          setError(errorMessage);
+        }
+        
+        // 現在のストリームがあれば停止
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
         }
       }
-      
-      setError(errorMessage);
-      console.error('Camera access error:', err);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   }, []);
 
   const stopCamera = useCallback(() => {
@@ -165,6 +247,24 @@ export const useCamera = (): UseCameraReturn => {
   }, [isStreamActive]);
 
   useEffect(() => {
+    // ページロード時にカメラ権限をチェック
+    const checkCameraPermission = async () => {
+      if ('permissions' in navigator) {
+        try {
+          const result = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          console.log('Camera permission status:', result.state);
+          
+          if (result.state === 'denied') {
+            setError('カメラへのアクセスが拒否されています。ブラウザの設定で許可してください。');
+          }
+        } catch (err) {
+          console.log('Permission API not supported or failed:', err);
+        }
+      }
+    };
+
+    checkCameraPermission();
+
     return () => {
       stopCamera();
     };

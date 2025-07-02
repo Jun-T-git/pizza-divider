@@ -83,16 +83,37 @@ export const CameraCapture: React.FC<CameraProps> = ({ onCapture, onError }) => 
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="text-center p-6">
+      <div className="flex items-center justify-center h-screen bg-gray-900 p-6">
+        <div className="text-center max-w-md">
           <div className="text-red-400 text-6xl mb-4">📷</div>
-          <p className="text-white mb-4">{error}</p>
-          <button
-            onClick={startCamera}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
-          >
-            再試行
-          </button>
+          <h2 className="text-white text-xl font-bold mb-4">カメラエラー</h2>
+          <p className="text-white mb-6 leading-relaxed">{error}</p>
+          
+          <div className="space-y-4">
+            <button
+              onClick={startCamera}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              再試行
+            </button>
+            
+            <div className="text-left bg-gray-800 p-4 rounded-lg text-sm">
+              <h3 className="text-orange-400 font-semibold mb-2">トラブルシューティング:</h3>
+              <ul className="text-gray-300 space-y-1 text-xs">
+                <li>• ブラウザでカメラの使用を許可してください</li>
+                <li>• HTTPS接続を確認してください</li>
+                <li>• 他のアプリがカメラを使用していないか確認</li>
+                <li>• ページを再読み込みして再試行</li>
+                <li>• デバイスにカメラが接続されているか確認</li>
+              </ul>
+            </div>
+            
+            <div className="text-xs text-gray-400">
+              URL: {window.location.href}<br/>
+              HTTPS: {window.location.protocol === 'https:' ? '✅' : '❌'}<br/>
+              UserAgent: {navigator.userAgent.slice(0, 50)}...
+            </div>
+          </div>
         </div>
       </div>
     );
