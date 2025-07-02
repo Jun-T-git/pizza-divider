@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
+import { CircleGuide } from "@/components/CircleGuide";
 import type { CameraProps } from "@/types";
 
 export const CameraCaptureSimple: React.FC<CameraProps> = ({
@@ -10,6 +11,20 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight - 200, // ボタンエリア分を除く
+      });
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleCapture = async () => {
     if (!webcamRef.current || isCapturing) return;
@@ -40,7 +55,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
 
   return (
     <div className="relative h-screen bg-black overflow-hidden">
-      <div className="relative w-full h-full">
+      <div className="relative w-full" style={{ height: dimensions.height }}>
         <Webcam
           ref={webcamRef}
           audio={false}
@@ -57,6 +72,14 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
             onError?.("カメラにアクセスできませんでした。");
           }}
         />
+
+        {dimensions.width > 0 && (
+          <CircleGuide
+            containerWidth={dimensions.width}
+            containerHeight={dimensions.height}
+            guideRatio={0.7}
+          />
+        )}
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
