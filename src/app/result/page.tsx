@@ -2,19 +2,10 @@
 
 import { DivisionOverlay } from "@/components/DivisionOverlay";
 import { Header } from "@/components/Header";
+import { PizzaCutterResponse } from "@/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-interface PizzaCutterResponse {
-  success: boolean;
-  svg_before_explosion: string;
-  svg_after_explosion: string;
-  svg_animated: string;
-  piece_svgs: string[];
-  overlay_image: string;
-  error_message: string;
-}
 
 export default function ResultPage() {
   const router = useRouter();
@@ -138,7 +129,7 @@ export default function ResultPage() {
               </h3>
               <ul className="text-sm text-slate-600 space-y-1">
                 <li>• {peopleCount}人で均等に分割されています</li>
-                <li>• 赤い線に沿って切り分けてください</li>
+                <li>• 線に沿って切り分けてください</li>
                 <li>• 中心から外側に向かって切り分けるとやりやすいです</li>
               </ul>
             </div>
@@ -146,7 +137,7 @@ export default function ResultPage() {
             <div className="">
               <Link href="/evaluate">
                 <button className="w-full py-4 px-6 my-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-all hover:scale-105 shadow-sm">
-                  分割後の評価をする
+                  写真通りに切り分けました
                 </button>
               </Link>
 

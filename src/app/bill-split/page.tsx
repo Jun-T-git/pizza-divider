@@ -83,7 +83,7 @@ export default function BillSplitPage() {
         console.error("Error loading data:", error);
       }
     }
-  }, []);
+  }, [totalAmount]);
 
   const calculateAmounts = (participantsList: ParticipantWithPayment[], amount: string) => {
     const total = parseInt(amount) || 0;
