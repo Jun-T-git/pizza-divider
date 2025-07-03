@@ -170,6 +170,19 @@ export default function BillSplitPage() {
 
     const totalPay = results.reduce((sum, r) => sum + r.pay, 0);
     
+    // totalPayが0の場合は均等割り
+    if (totalPay === 0) {
+      const baseAmount = Math.floor(total / results.length);
+      const amounts = new Array(results.length).fill(baseAmount);
+      const remainder = total - baseAmount * results.length;
+      
+      // 余りを先頭から配布
+      for (let i = 0; i < remainder; i++) {
+        amounts[i] += 1;
+      }
+      return amounts;
+    }
+    
     // 各顔の基本金額を計算（Math.floor使用）
     const amounts = results.map(result => 
       Math.floor((total * result.pay) / totalPay)
@@ -195,11 +208,12 @@ export default function BillSplitPage() {
         .map((result, index) => ({ index, pay: result.pay }))
         .sort((a, b) => a.pay - b.pay);
 
-      for (let i = 0; i < Math.abs(difference); i++) {
+      let remainingReduction = Math.abs(difference);
+      for (let i = 0; i < sortedIndices.length && remainingReduction > 0; i++) {
         const targetIndex = sortedIndices[i % sortedIndices.length].index;
-        if (amounts[targetIndex] > 0) {
-          amounts[targetIndex] -= 1;
-        }
+        const reduction = Math.min(amounts[targetIndex], remainingReduction);
+        amounts[targetIndex] -= reduction;
+        remainingReduction -= reduction;
       }
     }
 
