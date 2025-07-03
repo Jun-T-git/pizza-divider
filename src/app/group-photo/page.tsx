@@ -11,7 +11,7 @@ export default function GroupPhotoPage() {
   const [showCamera, setShowCamera] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const callEmotionAPI = async (imageFile: File) => {
+  const callEmotionAPI = async (imageFile: File, imageData: string) => {
     try {
       setIsProcessing(true);
 
@@ -24,75 +24,68 @@ export default function GroupPhotoPage() {
             dominant: "happy",
             scores: {
               happy: 0.85,
-              neutral: 0.10,
-              sad: 0.05
+              neutral: 0.1,
+              sad: 0.05,
             },
-            pay: 0.45 // 45%の支払い比率
+            pay: 0.45, // 45%の支払い比率
           },
           {
             image: "",
             dominant: "neutral",
             scores: {
-              happy: 0.30,
-              neutral: 0.60,
-              sad: 0.10
+              happy: 0.3,
+              neutral: 0.6,
+              sad: 0.1,
             },
-            pay: 0.35 // 35%の支払い比率
+            pay: 0.35, // 35%の支払い比率
           },
           {
             image: "",
             dominant: "happy",
             scores: {
-              happy: 0.70,
+              happy: 0.7,
               neutral: 0.25,
-              sad: 0.05
+              sad: 0.05,
             },
-            pay: 0.20 // 20%の支払い比率
-          }
+            pay: 0.2, // 20%の支払い比率
+          },
         ],
-        file: imageFile.name
+        file: "upload.jpg",
       };
 
-      // 開発環境かつローカルホストの場合はスタブを使用
-      const isLocalDev = process.env.NODE_ENV === "development" && 
-                        (window.location.hostname === "localhost" || 
-                         window.location.hostname === "127.0.0.1");
+      try {
+        // Base64エンコードされた画像データを取得（data:image/...;base64,を除去）
+        const base64Image = imageData.split(',')[1];
 
-      if (isLocalDev) {
-        // ローカル開発環境ではスタブデータを使用
-        localStorage.setItem("emotionResults", JSON.stringify(stubEmotionData));
-        console.log("感情認識結果（スタブ）:", stubEmotionData);
-      } else {
-        // 本番環境またはリモート開発環境では実際のAPIを呼び出す
-        try {
-          const formData = new FormData();
-          formData.append("file", imageFile);
-          formData.append("count", "4");
-
-          const apiUrl = process.env.NODE_ENV === "development"
-            ? "http://localhost:8000/api/face/emotion"
+        const apiUrl =
+          process.env.NODE_ENV === "development"
+            ? "http://localhost:9000/api/face/emotion"
             : "https://rocket2025-backend.onrender.com/api/face/emotion";
-            
-          const response = await fetch(apiUrl, {
-            method: "POST",
-            body: formData,
-          });
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            count: 4,
+            image: base64Image,
+          }),
+        });
 
-          const emotionData = await response.json();
-          localStorage.setItem("emotionResults", JSON.stringify(emotionData));
-          console.log("感情認識結果:", emotionData);
-        } catch (apiError) {
-          console.error("感情認識API呼び出しエラー:", apiError);
-          // APIエラー時はスタブデータを使用
-          localStorage.setItem("emotionResults", JSON.stringify(stubEmotionData));
-          console.log("APIエラーのためスタブデータを使用");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      }
 
+        const emotionData = await response.json();
+        localStorage.setItem("emotionResults", JSON.stringify(emotionData));
+        console.log("感情認識結果:", emotionData);
+      } catch (apiError) {
+        console.error("感情認識API呼び出しエラー:", apiError);
+        // APIエラー時はスタブデータを使用
+        localStorage.setItem("emotionResults", JSON.stringify(stubEmotionData));
+        console.log("APIエラーのためスタブデータを使用");
+      }
     } catch (error) {
       console.error("感情認識処理エラー:", error);
     } finally {
@@ -117,7 +110,7 @@ export default function GroupPhotoPage() {
         );
 
         // 感情認識API呼び出し
-        await callEmotionAPI(imageFile);
+        await callEmotionAPI(imageFile, imageData);
 
         router.push("/bill-split");
       };
