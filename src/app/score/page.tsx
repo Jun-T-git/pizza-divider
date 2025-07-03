@@ -278,7 +278,7 @@ export default function ScorePage() {
               </div>
             )} */}
 
-            {isSaved && (
+            {/* {isSaved && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
                 <div className="text-green-600 text-2xl mb-2">✅</div>
                 <p className="text-green-800 font-medium">
@@ -290,18 +290,12 @@ export default function ScorePage() {
                   </button>
                 </Link>
               </div>
-            )}
+            )} */}
 
             <div className="space-y-3">
               <Link href="/roulette">
                 <button className="w-full py-4 px-6 my-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-all hover:scale-105 shadow-sm">
                   ルーレットへ進む
-                </button>
-              </Link>
-
-              <Link href="/ranking">
-                <button className="w-full py-3 px-6 my-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium transition-colors">
-                  ランキングを見る
                 </button>
               </Link>
 
