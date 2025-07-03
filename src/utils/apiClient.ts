@@ -11,7 +11,6 @@ import {
   RankingResponse
 } from '@/types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 // File to base64 conversion utility
@@ -29,12 +28,134 @@ export const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
+
+// 画像のサイズを取得するユーティリティ関数
+const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      URL.revokeObjectURL(url);
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Failed to load image'));
+      URL.revokeObjectURL(url);
+    };
+    
+    img.src = url;
+  });
+};
+
 // 1. 理想的な切り方を計算
 export const calculateIdealCut = async (image: File, numPieces: number): Promise<CalculateIdealCutResponse> => {
-  // スタブ実装 - 実際のAPIは未実装
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  console.log('Analyzing pizza image with', numPieces, 'pieces');
   
-  // ダミーSVGを生成（800x800の正方形）
+  try {
+    // 画像のサイズを取得
+    const imageDimensions = await getImageDimensions(image);
+    console.log('Image dimensions:', imageDimensions);
+    
+    // FormDataを使用してファイルをアップロード
+    const formData = new FormData();
+    formData.append('file', image);
+    
+    const response = await fetch(`${API_BASE_URL}/api/pizza-cutter/analyze`, {
+      method: 'POST',
+      body: formData, // FormDataを直接送信（Content-Typeヘッダーは自動設定）
+    });
+
+    console.log('API Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error response:', errorText);
+      throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const analysisResult = await response.json();
+    console.log('Pizza analysis result:', analysisResult);
+    
+    // API結果からSVGを生成（実際の画像サイズを渡す）
+    const svg = generateSVGFromAnalysis(analysisResult, numPieces, imageDimensions);
+    
+    return { svg };
+  } catch (error) {
+    console.error('Pizza analysis error:', error);
+    
+    // エラー時はフォールバック（ダミーSVG）を返す
+    console.warn('Using fallback dummy SVG due to API error');
+    const svg = generateDummySVG(numPieces);
+    return { svg };
+  }
+};
+
+// API結果からSVGを生成する関数
+function generateSVGFromAnalysis(analysisResult: {
+  pizza_circle?: { 
+    center?: { x: number; y: number };
+    radius?: number;
+  };
+  salami_circles?: Array<{ 
+    center?: { x: number; y: number };
+    radius?: number;
+  }>;
+}, numPieces: number, imageDimensions: { width: number; height: number }): string {
+  // 実際の画像サイズに合わせてSVGサイズを設定
+  const svgWidth = imageDimensions.width;
+  const svgHeight = imageDimensions.height;
+  
+  // ピザの中心座標とサイズを設定
+  let centerX = svgWidth / 2;
+  let centerY = svgHeight / 2;
+  let radius = Math.min(svgWidth, svgHeight) * 0.4; // デフォルト半径
+  
+  // API結果からピザの円情報を取得
+  if (analysisResult.pizza_circle) {
+    const pizzaCircle = analysisResult.pizza_circle;
+    centerX = pizzaCircle.center?.x || centerX;
+    centerY = pizzaCircle.center?.y || centerY;
+    radius = pizzaCircle.radius || radius;
+  }
+  
+  // 分割線を生成
+  let svgPaths = '';
+  const angleStep = (2 * Math.PI) / numPieces;
+  
+  for (let i = 0; i < numPieces; i++) {
+    const angle = i * angleStep - Math.PI / 2;
+    const endX = centerX + Math.cos(angle) * radius;
+    const endY = centerY + Math.sin(angle) * radius;
+    
+    svgPaths += `<line x1="${centerX}" y1="${centerY}" x2="${endX}" y2="${endY}" stroke="#FF6B35" stroke-width="6" stroke-linecap="round" />`;
+  }
+  
+  // サラミ位置をAPI結果から取得
+  let salamiCircles = '';
+  if (analysisResult.salami_circles && Array.isArray(analysisResult.salami_circles)) {
+    salamiCircles = analysisResult.salami_circles.map((salami) => {
+      const x = salami.center?.x || centerX;
+      const y = salami.center?.y || centerY;
+      const r = salami.radius || 16;
+      return `<circle cx="${x}" cy="${y}" r="${r}" fill="#C5282F" stroke="#FFFFFF" stroke-width="2" />`;
+    }).join('');
+  }
+  
+  // フォールバックとしてダミーサラミを追加（API結果が空の場合）
+  if (!salamiCircles) {
+    salamiCircles = generateDummySalamiCircles();
+  }
+  
+  return `<svg viewBox="0 0 ${svgWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+    ${svgPaths}
+    ${salamiCircles}
+  </svg>`;
+}
+
+// ダミーSVGを生成する関数（エラー時のフォールバック）
+function generateDummySVG(numPieces: number): string {
   const centerX = 400;
   const centerY = 400;
   const radius = 360;
@@ -50,52 +171,26 @@ export const calculateIdealCut = async (image: File, numPieces: number): Promise
     svgPaths += `<line x1="${centerX}" y1="${centerY}" x2="${endX}" y2="${endY}" stroke="#FF6B35" stroke-width="6" stroke-linecap="round" />`;
   }
   
-  // サラミ位置のダミーデータ（800x800スケール）
-  const salamiCircles = [
-    '<circle cx="240" cy="300" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />',
-    '<circle cx="560" cy="200" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />',
-    '<circle cx="400" cy="440" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />',
-    '<circle cx="320" cy="180" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />',
-    '<circle cx="640" cy="360" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />',
-    '<circle cx="160" cy="400" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />',
-    '<circle cx="480" cy="320" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />',
-    '<circle cx="360" cy="560" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />'
-  ].join('');
+  const salamiCircles = generateDummySalamiCircles();
   
-  const svg = `<svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
     ${svgPaths}
     ${salamiCircles}
   </svg>`;
+}
 
-  /*
-  // 実際のAPI呼び出し（未実装時はコメントアウト）
-  try {
-    const base64Image = await fileToBase64(image);
-    
-    const response = await fetch(`${API_BASE_URL}/api/calculate-ideal-cut`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        image: base64Image,
-        num_pieces: numPieces
-      } as CalculateIdealCutRequest)
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-
-    return await response.json() as CalculateIdealCutResponse;
-  } catch (error) {
-    console.error('Calculate ideal cut error:', error);
-    throw error;
-  }
-  */
-
-  return { svg };
-};
+// ダミーサラミ円を生成する関数
+function generateDummySalamiCircles(): string {
+  const salamiPositions = [
+    { cx: 240, cy: 300 }, { cx: 560, cy: 200 }, { cx: 400, cy: 440 },
+    { cx: 320, cy: 180 }, { cx: 640, cy: 360 }, { cx: 160, cy: 400 },
+    { cx: 480, cy: 320 }, { cx: 360, cy: 560 }
+  ];
+  
+  return salamiPositions.map(pos => 
+    `<circle cx="${pos.cx}" cy="${pos.cy}" r="16" fill="#C5282F" stroke="#FFFFFF" stroke-width="4" />`
+  ).join('');
+}
 
 // 2. スコア計算
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
