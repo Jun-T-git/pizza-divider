@@ -3,9 +3,9 @@
 import { Header } from "@/components/Header";
 import {
   calculateScore,
-  generateUUID,
-  saveScore,
-  userApi,
+  // generateUUID,
+  // saveScore,
+  // userApi,
 } from "@/utils/apiClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,9 +18,9 @@ export default function ScorePage() {
   const [score, setScore] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [accountName, setAccountName] = useState<string>("ピザ太郎");
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  // const [accountName] = useState<string>("ピザ太郎");
+  // const [isSaving] = useState(false);
+  // const [isSaved] = useState(false);
 
   useEffect(() => {
     const loadAndEvaluate = async () => {
@@ -82,49 +82,49 @@ export default function ScorePage() {
     loadAndEvaluate();
   }, [router]);
 
-  const handleSaveScore = async () => {
-    if (score === null) return;
+  // const handleSaveScore = async () => {
+  //   if (score === null) return;
 
-    setIsSaving(true);
-    try {
-      const uuid = generateUUID();
+  //   setIsSaving(true);
+  //   try {
+  //     const uuid = generateUUID();
 
-      // 既存のスコア保存API（スタブ）
-      await saveScore(accountName, uuid, score);
+  //     // 既存のスコア保存API（スタブ）
+  //     await saveScore(accountName, uuid, score);
 
-      // 新しいユーザー記録API（エラーが起きてもアプリを継続）
-      try {
-        await userApi.createUserRecord({
-          account: accountName,
-          score: score,
-        });
-        console.log("User record saved successfully");
-      } catch (userApiError) {
-        console.warn(
-          "Failed to save user record, but continuing:",
-          userApiError
-        );
-        // ユーザー記録の保存に失敗してもアプリは継続
-      }
+  //     // 新しいユーザー記録API（エラーが起きてもアプリを継続）
+  //     try {
+  //       await userApi.createUserRecord({
+  //         account: accountName,
+  //         score: score,
+  //       });
+  //       console.log("User record saved successfully");
+  //     } catch (userApiError) {
+  //       console.warn(
+  //         "Failed to save user record, but continuing:",
+  //         userApiError
+  //       );
+  //       // ユーザー記録の保存に失敗してもアプリは継続
+  //     }
 
-      setIsSaved(true);
+  //     setIsSaved(true);
 
-      // 結果をlocalStorageに保存
-      localStorage.setItem(
-        "savedScore",
-        JSON.stringify({
-          accountName,
-          uuid,
-          score,
-        })
-      );
-    } catch (err) {
-      console.error("Error saving score:", err);
-      alert("スコアの保存に失敗しました");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  //     // 結果をlocalStorageに保存
+  //     localStorage.setItem(
+  //       "savedScore",
+  //       JSON.stringify({
+  //         accountName,
+  //         uuid,
+  //         score,
+  //       })
+  //     );
+  //   } catch (err) {
+  //     console.error("Error saving score:", err);
+  //     alert("スコアの保存に失敗しました");
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-600";
