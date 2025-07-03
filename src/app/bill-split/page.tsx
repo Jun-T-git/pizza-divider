@@ -5,53 +5,151 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 
+interface EmotionResult {
+  detected: number;
+  results: Array<{
+    image: string;
+    dominant: string;
+    scores: {
+      [key: string]: number;
+    };
+    pay: number;
+  }>;
+  file: string;
+}
+
+interface ParticipantWithPayment {
+  id: number;
+  name: string;
+  color: string;
+  active: boolean;
+  payRatio?: number;
+  amount?: number;
+}
+
 export default function BillSplitPage() {
   const router = useRouter();
   const [totalAmount, setTotalAmount] = useState<string>("3000");
-  const [participants, setParticipants] = useState<Array<{ id: number; name: string; color: string; active: boolean }>>([]);
-  const [splitAmount, setSplitAmount] = useState<number>(0);
+  const [participants, setParticipants] = useState<ParticipantWithPayment[]>([]);
+  const [emotionResults, setEmotionResults] = useState<EmotionResult | null>(null);
+  const [groupPhoto, setGroupPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     // localStorageから参加者情報を取得
     const savedParticipants = localStorage.getItem("participants");
+    const savedEmotionResults = localStorage.getItem("emotionResults");
+    const savedGroupPhoto = localStorage.getItem("groupPhoto");
+    
+    // グループ写真を設定
+    if (savedGroupPhoto) {
+      setGroupPhoto(savedGroupPhoto);
+    }
+    
     if (savedParticipants) {
       try {
-        const parsed = JSON.parse(savedParticipants);
-        setParticipants(parsed);
-
-        // 金額を人数で割る
-        const amount = parseInt(totalAmount) || 0;
-        const perPerson = Math.ceil(amount / parsed.length);
-        setSplitAmount(perPerson);
+        const parsed = JSON.parse(savedParticipants) as ParticipantWithPayment[];
+        
+        // 感情認識結果がある場合は支払い比率を計算
+        if (savedEmotionResults) {
+          const emotionData = JSON.parse(savedEmotionResults) as EmotionResult;
+          setEmotionResults(emotionData);
+          
+          // 各参加者に支払い比率を割り当て
+          const updatedParticipants = parsed.map((participant, index) => {
+            if (emotionData.results[index]) {
+              return {
+                ...participant,
+                payRatio: emotionData.results[index].pay
+              };
+            }
+            return {
+              ...participant,
+              payRatio: 1 / parsed.length // デフォルトは均等割り
+            };
+          });
+          
+          setParticipants(updatedParticipants);
+          calculateAmounts(updatedParticipants, totalAmount);
+        } else {
+          // 感情認識結果がない場合は均等割り
+          const updatedParticipants = parsed.map(p => ({
+            ...p,
+            payRatio: 1 / parsed.length
+          }));
+          setParticipants(updatedParticipants);
+          calculateAmounts(updatedParticipants, totalAmount);
+        }
       } catch (error) {
-        console.error("Error loading participants:", error);
+        console.error("Error loading data:", error);
       }
     }
-  }, [totalAmount]);
+  }, []);
+
+  const calculateAmounts = (participantsList: ParticipantWithPayment[], amount: string) => {
+    const total = parseInt(amount) || 0;
+    if (total === 0 || participantsList.length === 0) return;
+
+    // 支払い比率の合計を計算
+    const totalRatio = participantsList.reduce((sum, p) => sum + (p.payRatio || 0), 0);
+    
+    // 各参加者の金額を計算
+    const updatedParticipants = participantsList.map(participant => {
+      const ratio = participant.payRatio || 0;
+      const amount = Math.ceil((total * ratio) / totalRatio);
+      return {
+        ...participant,
+        amount
+      };
+    });
+    
+    setParticipants(updatedParticipants);
+  };
 
   const handleAmountChange = (value: string) => {
     // 数字のみ許可
     const numericValue = value.replace(/[^0-9]/g, "");
     setTotalAmount(numericValue);
-
+    
     // 金額を再計算
-    const amount = parseInt(numericValue) || 0;
-    const perPerson =
-      participants.length > 0 ? Math.ceil(amount / participants.length) : 0;
-    setSplitAmount(perPerson);
+    calculateAmounts(participants, numericValue);
   };
 
   const handleComplete = () => {
     // 割り勘情報を保存
-    localStorage.setItem(
-      "billSplitInfo",
-      JSON.stringify({
-        total: totalAmount,
-        perPerson: splitAmount,
-        participants: participants,
-      })
-    );
-
+    const billData: {
+      total: string;
+      emotionBased: boolean;
+      facePayments?: Array<{
+        index: number;
+        image: string;
+        dominant: string;
+        payRatio: number;
+        amount: number;
+      }>;
+      participants?: ParticipantWithPayment[];
+    } = {
+      total: totalAmount,
+      emotionBased: !!emotionResults,
+    };
+    
+    if (emotionResults && emotionResults.results) {
+      // 感情認識結果がある場合は顔ごとの金額を保存
+      billData.facePayments = emotionResults.results.map((result, index) => {
+        const amount = Math.ceil((parseInt(totalAmount) || 0) * result.pay / emotionResults.results.reduce((sum, r) => sum + r.pay, 0));
+        return {
+          index: index + 1,
+          image: result.image,
+          dominant: result.dominant,
+          payRatio: result.pay,
+          amount: amount
+        };
+      });
+    } else {
+      // 感情認識結果がない場合は参加者情報を保存
+      billData.participants = participants;
+    }
+    
+    localStorage.setItem("billSplitInfo", JSON.stringify(billData));
     router.push("/complete");
   };
 
@@ -72,6 +170,21 @@ export default function BillSplitPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-6">
             <div className="mb-8">
+              {/* グループ写真表示 */}
+              {groupPhoto && (
+                <div className="mb-6">
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-sm bg-slate-50">
+                    <img
+                      src={groupPhoto}
+                      alt="グループ写真"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 text-center mt-2">
+                    みんなの記念写真
+                  </p>
+                </div>
+              )}
 
               {/* 金額入力 */}
               <div className="mb-6">
@@ -95,26 +208,69 @@ export default function BillSplitPage() {
               {/* 参加者リスト */}
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-slate-700 mb-4">
-                  参加者 ({participants.length}名)
+                  {emotionResults ? `検出された顔 (${emotionResults.detected}名)` : `参加者 (${participants.length}名)`}
                 </h3>
                 <div className="space-y-3">
-                  {participants.map((participant, index) => (
-                    <div
-                      key={participant.id || index}
-                      className="flex items-center justify-between p-4 bg-slate-50 rounded-xl"
-                    >
-                      <span className="font-medium text-slate-800">
-                        {participant.name || `参加者${index + 1}`}
-                      </span>
-                      <span className="text-slate-900 font-semibold">
-                        ¥{splitAmount.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
+                  {emotionResults && emotionResults.results ? (
+                    // 感情認識結果がある場合は顔写真ごとに表示
+                    emotionResults.results.map((result, index) => {
+                      const amount = Math.ceil((parseInt(totalAmount) || 0) * result.pay / emotionResults.results.reduce((sum, r) => sum + r.pay, 0));
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-4 bg-slate-50 rounded-xl"
+                        >
+                          <div className="flex items-center gap-3">
+                            {result.image ? (
+                              <img
+                                src={`data:image/jpeg;base64,${result.image}`}
+                                alt={`顔${index + 1}`}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-slate-300 flex items-center justify-center text-white font-bold">
+                                {index + 1}
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-medium text-slate-800">
+                                顔{index + 1}
+                              </span>
+                              <div className="text-xs text-slate-500">
+                                {result.dominant} ({Math.round(result.pay * 100)}%)
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-slate-900 font-semibold">
+                            ¥{amount.toLocaleString()}
+                          </span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    // 感情認識結果がない場合は従来通りユーザー名で表示
+                    participants.map((participant, index) => (
+                      <div
+                        key={participant.id || index}
+                        className="flex items-center justify-between p-4 bg-slate-50 rounded-xl"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium text-slate-800">
+                            {participant.name || `参加者${index + 1}`}
+                          </span>
+                        </div>
+                        <span className="text-slate-900 font-semibold">
+                          ¥{(participant.amount || 0).toLocaleString()}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
               <p className="text-xs text-slate-500 text-center">
-                ※ 端数は切り上げて計算しています
+                {emotionResults 
+                  ? "※ 感情認識結果をもとに支払い比率を計算しています"
+                  : "※ 端数は切り上げて計算しています"}
               </p>
             </div>
 
