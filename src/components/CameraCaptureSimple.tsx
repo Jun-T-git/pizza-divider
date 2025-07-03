@@ -163,7 +163,6 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
           }}
           mirrored={currentFacingMode === "user"}
           className="w-full h-full object-cover"
-          style={{ transform: "scaleX(-1)" }}
           onUserMediaError={(error) => {
             console.error("Webcam error:", error);
             onError?.("カメラにアクセスできませんでした。");
