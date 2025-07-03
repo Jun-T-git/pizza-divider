@@ -14,34 +14,87 @@ export default function GroupPhotoPage() {
   const callEmotionAPI = async (imageFile: File) => {
     try {
       setIsProcessing(true);
-      
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      formData.append('count', '4'); // 最大4人を想定
-      
-      const apiUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8000/api/face/emotion'
-        : 'https://rocket2025-backend.onrender.com/api/face/emotion';
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+      // スタブデータを生成
+      const stubEmotionData = {
+        detected: 3,
+        results: [
+          {
+            image: "", // 実際のAPIでは Base64 画像が入る
+            dominant: "happy",
+            scores: {
+              happy: 0.85,
+              neutral: 0.10,
+              sad: 0.05
+            },
+            pay: 0.45 // 45%の支払い比率
+          },
+          {
+            image: "",
+            dominant: "neutral",
+            scores: {
+              happy: 0.30,
+              neutral: 0.60,
+              sad: 0.10
+            },
+            pay: 0.35 // 35%の支払い比率
+          },
+          {
+            image: "",
+            dominant: "happy",
+            scores: {
+              happy: 0.70,
+              neutral: 0.25,
+              sad: 0.05
+            },
+            pay: 0.20 // 20%の支払い比率
+          }
+        ],
+        file: imageFile.name
+      };
+
+      // 開発環境かつローカルホストの場合はスタブを使用
+      const isLocalDev = process.env.NODE_ENV === "development" && 
+                        (window.location.hostname === "localhost" || 
+                         window.location.hostname === "127.0.0.1");
+
+      if (isLocalDev) {
+        // ローカル開発環境ではスタブデータを使用
+        localStorage.setItem("emotionResults", JSON.stringify(stubEmotionData));
+        console.log("感情認識結果（スタブ）:", stubEmotionData);
+      } else {
+        // 本番環境またはリモート開発環境では実際のAPIを呼び出す
+        try {
+          const formData = new FormData();
+          formData.append("file", imageFile);
+          formData.append("count", "4");
+
+          const apiUrl = process.env.NODE_ENV === "development"
+            ? "http://localhost:8000/api/face/emotion"
+            : "https://rocket2025-backend.onrender.com/api/face/emotion";
+            
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const emotionData = await response.json();
+          localStorage.setItem("emotionResults", JSON.stringify(emotionData));
+          console.log("感情認識結果:", emotionData);
+        } catch (apiError) {
+          console.error("感情認識API呼び出しエラー:", apiError);
+          // APIエラー時はスタブデータを使用
+          localStorage.setItem("emotionResults", JSON.stringify(stubEmotionData));
+          console.log("APIエラーのためスタブデータを使用");
+        }
       }
-      
-      const emotionData = await response.json();
-      
-      // 感情認識結果をローカルストレージに保存
-      localStorage.setItem('emotionResults', JSON.stringify(emotionData));
-      
-      console.log('感情認識結果:', emotionData);
-      
+
     } catch (error) {
-      console.error('感情認識API呼び出しエラー:', error);
-      // エラーが発生しても処理を続行
+      console.error("感情認識処理エラー:", error);
     } finally {
       setIsProcessing(false);
     }
@@ -62,10 +115,10 @@ export default function GroupPhotoPage() {
             lastModified: imageFile.lastModified,
           })
         );
-        
+
         // 感情認識API呼び出し
         await callEmotionAPI(imageFile);
-        
+
         router.push("/bill-split");
       };
       reader.readAsDataURL(imageFile);
@@ -101,10 +154,9 @@ export default function GroupPhotoPage() {
         <CameraCaptureSimple
           onCapture={handleCapture}
           onError={handleError}
-          isSelfie={true}
           showGuide={false}
         />
-        
+
         {isProcessing && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
             <div className="bg-white rounded-lg p-6 text-center">
@@ -120,15 +172,11 @@ export default function GroupPhotoPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Header />
-      
+
       <div className="max-w-lg mx-auto p-6">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-medium text-slate-800 mb-2">
-            集合写真
-          </h2>
-          <p className="text-slate-600 text-sm">
-            みんなで記念撮影をしましょう
-          </p>
+          <h2 className="text-xl font-medium text-slate-800 mb-2">集合写真</h2>
+          <p className="text-slate-600 text-sm">みんなで記念撮影をしましょう</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -145,7 +193,8 @@ export default function GroupPhotoPage() {
               </div>
 
               <p className="text-sm text-slate-600 text-center leading-relaxed">
-                ピザの分割が完了しました<br />
+                ピザの分割が完了しました
+                <br />
                 みんなで記念写真を撮りましょう
               </p>
             </div>

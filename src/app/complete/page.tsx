@@ -1,10 +1,42 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 
 export default function Complete() {
   const router = useRouter();
+  const [groupPhoto, setGroupPhoto] = useState<string | null>(null);
+  const [billInfo, setBillInfo] = useState<{
+    total: string;
+    participants: Array<{
+      id: number;
+      name: string;
+      color: string;
+      active: boolean;
+      payRatio?: number;
+      amount?: number;
+    }>;
+    emotionBased?: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    // localStorageから情報を取得
+    const savedGroupPhoto = localStorage.getItem("groupPhoto");
+    const savedBillInfo = localStorage.getItem("billSplitInfo");
+    
+    if (savedGroupPhoto) {
+      setGroupPhoto(savedGroupPhoto);
+    }
+    
+    if (savedBillInfo) {
+      try {
+        setBillInfo(JSON.parse(savedBillInfo));
+      } catch (error) {
+        console.error("Error parsing bill info:", error);
+      }
+    }
+  }, []);
 
   const handleBackToStart = () => {
     router.push("/");
@@ -27,6 +59,19 @@ export default function Complete() {
               お疲れ様でした
             </p>
             
+            {/* グループ写真表示 */}
+            {groupPhoto && (
+              <div className="mb-8">
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-sm bg-slate-50">
+                  <img
+                    src={groupPhoto}
+                    alt="グループ写真"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+            
             <div className="space-y-4 text-left bg-slate-50 rounded-xl p-6 mb-8">
               <div className="flex items-center gap-4">
                 <span className="text-lg opacity-70">🍕</span>
@@ -42,7 +87,10 @@ export default function Complete() {
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-lg opacity-70">💰</span>
-                <span className="text-slate-700">割り勘を計算しました</span>
+                <span className="text-slate-700">
+                  割り勘を計算しました
+                  {billInfo?.emotionBased && " (感情認識付き)"}
+                </span>
               </div>
             </div>
             
