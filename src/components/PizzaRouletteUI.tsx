@@ -54,7 +54,7 @@ const PizzaRouletteUI: React.FC = () => {
     {}
   );
   const [isCompleted, setIsCompleted] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [, setCurrentStep] = useState(0);
   const [pieceColors, setPieceColors] = useState<{ [pieceId: number]: string }>({});
   const [isColorAnimating, setIsColorAnimating] = useState(false);
 
@@ -71,7 +71,7 @@ const PizzaRouletteUI: React.FC = () => {
         if (Array.isArray(participants) && participants.length > 0) {
           const loadedUsers = participants
             .filter((p) => p && (p.id || p.name)) // 有効な参加者のみ
-            .map((p: any, index: number) => ({
+            .map((p: { id?: number; name?: string; color?: string }, index: number) => ({
               id: p.id || index + 1,
               nickname: p.name || `参加者${p.id || index + 1}`,
               color: p.color || "#ef4444", // 色情報を保持（デフォルトは赤）

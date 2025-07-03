@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 export default function BillSplitPage() {
   const router = useRouter();
   const [totalAmount, setTotalAmount] = useState<string>("3000");
-  const [participants, setParticipants] = useState<any[]>([]);
+  const [participants, setParticipants] = useState<Array<{ id: number; name: string; color: string; active: boolean }>>([]);
   const [splitAmount, setSplitAmount] = useState<number>(0);
 
   useEffect(() => {

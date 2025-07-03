@@ -173,7 +173,7 @@ export default function SettingsPage() {
                           style={{ backgroundColor: participant.color }}
                         />
                         <span className="text-xs text-gray-500 hidden sm:inline">
-                          {Object.entries(COLOR_DEFINITIONS).find(([_, def]) => def.hex === participant.color)?.[0] || 'custom'}
+                          {Object.entries(COLOR_DEFINITIONS).find(([, def]) => def.hex === participant.color)?.[0] || 'custom'}
                         </span>
                       </div>
                       {participants.length > 2 && (
