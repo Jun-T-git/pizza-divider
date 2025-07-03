@@ -36,11 +36,7 @@ export default function CameraPage() {
 
   return (
     <div>
-      <CameraCaptureSimple
-        onCapture={handleCapture}
-        onError={handleError}
-        isSelfie={true}
-      />
+      <CameraCaptureSimple onCapture={handleCapture} onError={handleError} />
     </div>
   );
 }

@@ -67,34 +67,33 @@ export default function GroupPhotoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 p-6">
-      <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-purple-500 p-4">
-            <h1 className="text-white text-xl font-bold text-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-lg mx-auto">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-6 border-b border-slate-200">
+            <h1 className="text-slate-800 text-2xl font-light text-center">
               集合写真
             </h1>
           </div>
 
           <div className="p-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 text-center">
-                📸 みんなで記念撮影！
+            <div className="mb-8">
+              <h2 className="text-lg font-medium text-slate-800 mb-6 text-center">
+                みんなで記念撮影
               </h2>
 
               {/* カメラプレビューエリア */}
-              <div className="relative w-full aspect-square rounded-lg overflow-hidden shadow-md bg-gray-100 mb-4">
+              <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm bg-slate-50 mb-6">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-6xl mb-2">📷</div>
-                    <p className="text-gray-500">記念撮影の準備</p>
+                    <div className="text-5xl mb-3 opacity-60">📷</div>
+                    <p className="text-slate-500">記念撮影の準備</p>
                   </div>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-600 text-center">
-                ピザの分割が完了しました！
-                <br />
+              <p className="text-sm text-slate-600 text-center leading-relaxed">
+                ピザの分割が完了しました<br />
                 みんなで記念写真を撮りましょう
               </p>
             </div>
@@ -102,13 +101,13 @@ export default function GroupPhotoPage() {
             <div className="space-y-3">
               <button
                 onClick={startCamera}
-                className="w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all bg-purple-500 hover:bg-purple-600 active:scale-95 text-white shadow-lg"
+                className="w-full py-4 px-6 rounded-xl font-medium text-lg transition-all bg-slate-900 hover:bg-slate-800 hover:scale-105 text-white shadow-sm"
               >
-                📸 撮影する
+                撮影する
               </button>
 
               <Link href="/bill-split">
-                <button className="w-full py-3 px-6 rounded-lg border-2 border-gray-300 text-gray-600 font-medium hover:bg-gray-50 transition-colors">
+                <button className="w-full py-3 px-6 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
                   スキップして次へ
                 </button>
               </Link>

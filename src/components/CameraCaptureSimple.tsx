@@ -46,7 +46,9 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
         // Base64からFileオブジェクトを作成
         const response = await fetch(screenshot);
         const blob = await response.blob();
-        const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        const file = new File([blob], `photo_${Date.now()}.jpg`, {
+          type: "image/jpeg",
+        });
         onCapture(file);
         return;
       }

@@ -10,39 +10,38 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex flex-col items-center justify-center p-6">
-      <div className="text-center max-w-md mx-auto">
-        <div className="text-8xl mb-6">🍕</div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col items-center justify-center p-6">
+      <div className="text-center max-w-lg mx-auto">
+        <div className="text-7xl mb-8">🍕</div>
         
-        <h1 className="text-4xl font-bold text-gray-800 mb-4">
+        <h1 className="text-4xl sm:text-5xl font-light text-slate-800 mb-6">
           ピザ分割アプリ
         </h1>
         
-        <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+        <p className="text-lg text-slate-600 mb-12 leading-relaxed">
           公平にピザを分けて<br />
-          みんなで楽しく食べよう！
+          みんなで楽しく食べよう
         </p>
         
         <button 
           onClick={handleStart}
-          className="bg-orange-500 hover:bg-orange-600 text-white text-lg font-semibold py-4 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[60px] flex items-center justify-center gap-3 w-full"
+          className="bg-slate-900 hover:bg-slate-800 text-white text-lg font-medium py-4 px-8 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 w-full max-w-xs"
         >
-          <span className="text-2xl">🚀</span>
-          スタート
+          始める
         </button>
         
-        <div className="mt-12 grid grid-cols-3 gap-4 text-sm">
+        <div className="mt-16 grid grid-cols-3 gap-6 text-sm">
           <div className="text-center">
-            <div className="text-3xl mb-2">📷</div>
-            <p className="text-gray-600">ピザを撮影</p>
+            <div className="text-2xl mb-3 opacity-70">📷</div>
+            <p className="text-slate-600">ピザを撮影</p>
           </div>
           <div className="text-center">
-            <div className="text-3xl mb-2">✂️</div>
-            <p className="text-gray-600">公平に分割</p>
+            <div className="text-2xl mb-3 opacity-70">✂️</div>
+            <p className="text-slate-600">公平に分割</p>
           </div>
           <div className="text-center">
-            <div className="text-3xl mb-2">🎲</div>
-            <p className="text-gray-600">ルーレット</p>
+            <div className="text-2xl mb-3 opacity-70">🎯</div>
+            <p className="text-slate-600">分配</p>
           </div>
         </div>
       </div>
