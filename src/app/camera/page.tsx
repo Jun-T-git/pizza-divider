@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export default function CameraPage() {
   const router = useRouter();
 
+
   const handleCapture = (imageFile: File) => {
     try {
       const reader = new FileReader();
@@ -21,6 +22,7 @@ export default function CameraPage() {
             lastModified: imageFile.lastModified,
           })
         );
+
         router.push("/settings");
       };
       reader.readAsDataURL(imageFile);

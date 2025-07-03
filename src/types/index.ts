@@ -33,9 +33,7 @@ export interface CameraProps {
 
 export interface DivisionOverlayProps {
   imageUrl: string;
-  idealSvg?: string;
-  divisionLines?: Line[];
-  salamiPositions?: Point[];
+  overlayImage?: string;
   pieceValues?: number[];
 }
 

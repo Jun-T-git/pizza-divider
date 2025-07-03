@@ -4,61 +4,30 @@ import { DivisionOverlayProps } from '@/types';
 
 export const DivisionOverlay: React.FC<DivisionOverlayProps> = ({
   imageUrl,
-  idealSvg,
-  divisionLines = [],
-  salamiPositions = [],
+  overlayImage,
   pieceValues = []
 }) => {
   return (
     <div className="relative w-full max-w-md mx-auto">
       {/* 正方形のコンテナ */}
       <div className="relative w-full aspect-square overflow-hidden rounded-lg shadow-lg bg-gray-100">
+        {/* 背景の撮影画像 */}
         <img
           src={imageUrl}
           alt="Pizza"
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
         />
         
-        {/* SVGオーバーレイ - APIからのSVGを優先 */}
-        {idealSvg ? (
-          <div 
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            dangerouslySetInnerHTML={{ __html: idealSvg }}
+        {/* PNGオーバーレイ画像 */}
+        {overlayImage && (
+          <img
+            src={overlayImage.startsWith('data:') ? overlayImage : `data:image/png;base64,${overlayImage}`}
+            alt="Pizza Division Overlay"
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            style={{
+              mixBlendMode: 'normal'
+            }}
           />
-        ) : (
-          // フォールバック: 従来の線・点描画
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox="0 0 800 800"
-            preserveAspectRatio="xMidYMid meet"
-          >
-            {divisionLines.map((line, index) => (
-              <line
-                key={index}
-                x1={line.start.x}
-                y1={line.start.y}
-                x2={line.end.x}
-                y2={line.end.y}
-                stroke="#FF6B35"
-                strokeWidth="6"
-                strokeLinecap="round"
-                className="drop-shadow-lg"
-              />
-            ))}
-            
-            {salamiPositions.map((salami, index) => (
-              <circle
-                key={index}
-                cx={salami.x}
-                cy={salami.y}
-                r="16"
-                fill="#C5282F"
-                stroke="#FFFFFF"
-                strokeWidth="4"
-                className="drop-shadow-md"
-              />
-            ))}
-          </svg>
         )}
       </div>
 
