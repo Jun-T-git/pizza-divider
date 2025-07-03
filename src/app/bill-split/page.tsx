@@ -506,49 +506,6 @@ export default function BillSplitPage() {
     }
   };
 
-  const handleShareToSlack = async () => {
-    console.log('=== Slack Share ===');
-
-    const imageData = await generateShareImage();
-    if (!imageData) {
-      alert('画像の生成に失敗しました。');
-      return;
-    }
-
-    // 画像をダウンロード
-    const link = document.createElement('a');
-    link.download = 'galaxycutter-result.png';
-    link.href = imageData;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Slackチャンネルを開く
-    const channelId = 'C07EGA415EF';
-    const message = `🍕 焼き立てのピザを配布中！\nGalaxyCutterで割り勘計算完了！\n合計: ¥${parseInt(totalAmount || '0').toLocaleString()}\n\n📸 結果画像をアップロードしてください\n\n#ROCKET_PIZZA #HackId19 #Hackday2025 #RocketFactory`;
-    const encodedMessage = encodeURIComponent(message);
-    const slackUrl = `slack://channel?team=&id=${channelId}&message=${encodedMessage}`;
-
-    // Slackアプリが利用できない場合のフォールバック
-    const webSlackUrl = `https://app.slack.com/client/T0123456789/${channelId}`;
-
-    try {
-      // Slackアプリを開く
-      window.open(slackUrl, '_blank');
-
-      // 3秒後にWebブラウザ版もオープン（フォールバック）
-      setTimeout(() => {
-        if (confirm('Slackアプリが開かない場合は、ブラウザ版Slackを開きますか？')) {
-          window.open(webSlackUrl, '_blank');
-        }
-      }, 3000);
-    } catch (error) {
-      console.error('Slack open failed:', error);
-      // フォールバック: ブラウザ版を開く
-      window.open(webSlackUrl, '_blank');
-    }
-  };
-
   const handleShareImage = async () => {
     console.log('=== Share Image Debug ===');
     console.log('Total Amount:', totalAmount);
