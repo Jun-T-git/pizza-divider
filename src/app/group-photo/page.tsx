@@ -9,11 +9,44 @@ import { useState } from "react";
 export default function GroupPhotoPage() {
   const router = useRouter();
   const [showCamera, setShowCamera] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleCapture = (imageFile: File) => {
+  const callEmotionAPI = async (imageFile: File) => {
+    try {
+      setIsProcessing(true);
+      
+      const formData = new FormData();
+      formData.append('file', imageFile);
+      formData.append('count', '4'); // 最大4人を想定
+      
+      const response = await fetch('https://rocket2025-backend.onrender.com/api/face/emotion', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const emotionData = await response.json();
+      
+      // 感情認識結果をローカルストレージに保存
+      localStorage.setItem('emotionResults', JSON.stringify(emotionData));
+      
+      console.log('感情認識結果:', emotionData);
+      
+    } catch (error) {
+      console.error('感情認識API呼び出しエラー:', error);
+      // エラーが発生しても処理を続行
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCapture = async (imageFile: File) => {
     try {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const imageData = e.target?.result as string;
         localStorage.setItem("groupPhoto", imageData);
         localStorage.setItem(
@@ -25,6 +58,10 @@ export default function GroupPhotoPage() {
             lastModified: imageFile.lastModified,
           })
         );
+        
+        // 感情認識API呼び出し
+        await callEmotionAPI(imageFile);
+        
         router.push("/bill-split");
       };
       reader.readAsDataURL(imageFile);
@@ -63,6 +100,15 @@ export default function GroupPhotoPage() {
           isSelfie={true}
           showGuide={false}
         />
+        
+        {isProcessing && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+            <div className="bg-white rounded-lg p-6 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-3"></div>
+              <p className="text-slate-600">感情を分析中...</p>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
