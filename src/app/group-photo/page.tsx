@@ -21,7 +21,7 @@ export default function GroupPhotoPage() {
         detected: 3,
         results: [
           {
-            image: "", // 実際のAPIでは Base64 画像が入る
+            face: "", // 実際のAPIでは Base64 顔画像（data URI形式）が入る
             dominant: "happy",
             scores: {
               happy: 0.85,
@@ -31,7 +31,7 @@ export default function GroupPhotoPage() {
             pay: 0.45, // 45%の支払い比率
           },
           {
-            image: "",
+            face: "",
             dominant: "neutral",
             scores: {
               happy: 0.3,
@@ -41,7 +41,7 @@ export default function GroupPhotoPage() {
             pay: 0.35, // 35%の支払い比率
           },
           {
-            image: "",
+            face: "",
             dominant: "happy",
             scores: {
               happy: 0.7,

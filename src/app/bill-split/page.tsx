@@ -8,7 +8,7 @@ import { useEffect, useState, useRef } from "react";
 interface EmotionResult {
   detected: number;
   results: Array<{
-    image: string;
+    face: string; // Base64エンコードされた顔画像（data URI形式）
     dominant: string;
     scores: {
       [key: string]: number;
@@ -594,7 +594,7 @@ export default function BillSplitPage() {
         );
         return {
           index: index + 1,
-          image: result.image,
+          image: result.face,
           dominant: result.dominant,
           payRatio: result.pay,
           amount: amount,
@@ -688,9 +688,9 @@ export default function BillSplitPage() {
                             }}
                           >
                             <div className="flex items-center gap-3">
-                              {result.image ? (
+                              {result.face ? (
                                 <img
-                                  src={`data:image/jpeg;base64,${result.image}`}
+                                  src={result.face}
                                   alt={`顔${index + 1}`}
                                   className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                                 />
