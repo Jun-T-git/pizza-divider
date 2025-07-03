@@ -107,17 +107,53 @@ export default function BillSplitPage() {
       0
     );
 
-    // 各参加者の金額を計算
+    // 各参加者の金額を計算（まず基本的な割り当て）
     const updatedParticipants = participantsList.map((participant) => {
       const ratio = participant.payRatio || 0;
-      const amount = Math.ceil((total * ratio) / totalRatio);
+      const amount = Math.floor((total * ratio) / totalRatio);
       return {
         ...participant,
         amount,
+        adjustmentRatio: ratio, // 端数調整のために比率も保持
       };
     });
 
-    setParticipants(updatedParticipants);
+    // 端数を調整して合計を一致させる
+    const currentTotal = updatedParticipants.reduce((sum, p) => sum + p.amount, 0);
+    const difference = total - currentTotal;
+
+    if (difference > 0) {
+      // 不足分がある場合、比率が高い順に1円ずつ追加
+      const sortedByRatio = [...updatedParticipants]
+        .map((p, index) => ({ ...p, originalIndex: index }))
+        .sort((a, b) => b.adjustmentRatio - a.adjustmentRatio);
+
+      for (let i = 0; i < difference; i++) {
+        const targetIndex = sortedByRatio[i % sortedByRatio.length].originalIndex;
+        updatedParticipants[targetIndex].amount += 1;
+      }
+    } else if (difference < 0) {
+      // 超過分がある場合、比率が低い順に1円ずつ減額
+      const sortedByRatio = [...updatedParticipants]
+        .map((p, index) => ({ ...p, originalIndex: index }))
+        .sort((a, b) => a.adjustmentRatio - b.adjustmentRatio);
+
+      for (let i = 0; i < Math.abs(difference); i++) {
+        const targetIndex = sortedByRatio[i % sortedByRatio.length].originalIndex;
+        if (updatedParticipants[targetIndex].amount > 0) {
+          updatedParticipants[targetIndex].amount -= 1;
+        }
+      }
+    }
+
+    // adjustmentRatio プロパティを削除  
+    const finalParticipants = updatedParticipants.map(({ adjustmentRatio, ...p }) => {
+      // adjustmentRatio を除去
+      void adjustmentRatio;
+      return p;
+    });
+
+    setParticipants(finalParticipants);
   };
 
   const handleAmountChange = (value: string) => {
@@ -127,6 +163,61 @@ export default function BillSplitPage() {
 
     // 金額を再計算
     calculateAmounts(participants, numericValue);
+  };
+
+  const calculateEmotionAmounts = (results: EmotionResult['results'], total: number) => {
+    if (!results || results.length === 0) return [];
+
+    const totalPay = results.reduce((sum, r) => sum + r.pay, 0);
+    
+    // totalPayが0の場合は均等割り
+    if (totalPay === 0) {
+      const baseAmount = Math.floor(total / results.length);
+      const amounts = new Array(results.length).fill(baseAmount);
+      const remainder = total - baseAmount * results.length;
+      
+      // 余りを先頭から配布
+      for (let i = 0; i < remainder; i++) {
+        amounts[i] += 1;
+      }
+      return amounts;
+    }
+    
+    // 各顔の基本金額を計算（Math.floor使用）
+    const amounts = results.map(result => 
+      Math.floor((total * result.pay) / totalPay)
+    );
+
+    // 端数を調整
+    const currentTotal = amounts.reduce((sum, amount) => sum + amount, 0);
+    const difference = total - currentTotal;
+
+    if (difference > 0) {
+      // 不足分がある場合、支払い比率が高い順に1円ずつ追加
+      const sortedIndices = results
+        .map((result, index) => ({ index, pay: result.pay }))
+        .sort((a, b) => b.pay - a.pay);
+
+      for (let i = 0; i < difference; i++) {
+        const targetIndex = sortedIndices[i % sortedIndices.length].index;
+        amounts[targetIndex] += 1;
+      }
+    } else if (difference < 0) {
+      // 超過分がある場合、支払い比率が低い順に1円ずつ減額
+      const sortedIndices = results
+        .map((result, index) => ({ index, pay: result.pay }))
+        .sort((a, b) => a.pay - b.pay);
+
+      let remainingReduction = Math.abs(difference);
+      for (let i = 0; i < sortedIndices.length && remainingReduction > 0; i++) {
+        const targetIndex = sortedIndices[i % sortedIndices.length].index;
+        const reduction = Math.min(amounts[targetIndex], remainingReduction);
+        amounts[targetIndex] -= reduction;
+        remainingReduction -= reduction;
+      }
+    }
+
+    return amounts;
   };
 
   const handleFaceNameAssignment = (faceIndex: number, participantName: string) => {
@@ -270,11 +361,11 @@ export default function BillSplitPage() {
         ctx.fillText(`DETECTED: ${emotionResults.detected} PEOPLE`, canvas.width / 2, currentY);
         currentY += 40;
 
-        const totalPay = emotionResults.results.reduce((sum, r) => sum + r.pay, 0);
+        const amounts = calculateEmotionAmounts(emotionResults.results, parseInt(totalAmount || '0'));
 
         for (let i = 0; i < emotionResults.results.length; i++) {
           const result = emotionResults.results[i];
-          const amount = Math.ceil((parseInt(totalAmount || '0')) * result.pay / totalPay);
+          const amount = amounts[i];
 
           // 項目行
           ctx.font = '16px "Courier New", monospace';
@@ -379,10 +470,11 @@ export default function BillSplitPage() {
 
     if (emotionResults && emotionResults.results && emotionResults.results.length > 0) {
       message += `👥 参加者: ${emotionResults.detected}名\n\n`;
+      const amounts = calculateEmotionAmounts(emotionResults.results, parseInt(totalAmount || '0'));
       emotionResults.results.forEach((result, index) => {
         const assignedName = faceNameAssignments[index];
         const displayName = assignedName && assignedName.trim() !== '' ? assignedName : `顔${index + 1}`;
-        const amount = Math.ceil((parseInt(totalAmount || '0')) * result.pay / emotionResults.results.reduce((sum, r) => sum + r.pay, 0));
+        const amount = amounts[index];
         message += `${displayName}: ¥${amount.toLocaleString()} (${Math.round(result.pay * 100)}%)\n`;
       });
     } else if (participants && participants.length > 0) {
@@ -587,17 +679,14 @@ export default function BillSplitPage() {
 
     if (emotionResults && emotionResults.results) {
       // 感情認識結果がある場合は顔ごとの金額を保存
+      const amounts = calculateEmotionAmounts(emotionResults.results, parseInt(totalAmount) || 0);
       billData.facePayments = emotionResults.results.map((result, index) => {
-        const amount = Math.ceil(
-          ((parseInt(totalAmount) || 0) * result.pay) /
-            emotionResults.results.reduce((sum, r) => sum + r.pay, 0)
-        );
         return {
           index: index + 1,
           image: result.face,
           dominant: result.dominant,
           payRatio: result.pay,
-          amount: amount,
+          amount: amounts[index],
         };
       });
     } else {
@@ -669,90 +758,87 @@ export default function BillSplitPage() {
                 <div className="space-y-3">
                   {emotionResults && emotionResults.results
                     ? // 感情認識結果がある場合は顔写真ごとに表示
-                      emotionResults.results.map((result, index) => {
-                        const amount = Math.ceil(
-                          ((parseInt(totalAmount) || 0) * result.pay) /
-                            emotionResults.results.reduce(
-                              (sum, r) => sum + r.pay,
-                              0
-                            )
-                        );
-                        return (
-                        <div key={index}>
-                          <div
-                            className="flex items-center justify-between p-4 rounded-xl transition-colors"
-                            style={{
-                              backgroundColor: faceNameAssignments[index]
-                                ? `${getParticipantColor(faceNameAssignments[index])}20`
-                                : '#f1f5f9'
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              {result.face ? (
-                                <img
-                                  src={result.face}
-                                  alt={`顔${index + 1}`}
-                                  className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-slate-300 flex items-center justify-center text-white font-bold">
-                                  {index + 1}
+                      (() => {
+                        const amounts = calculateEmotionAmounts(emotionResults.results, parseInt(totalAmount) || 0);
+                        return emotionResults.results.map((result, index) => {
+                          const amount = amounts[index];
+                          return (
+                            <div key={index}>
+                              <div
+                                className="flex items-center justify-between p-4 rounded-xl transition-colors"
+                                style={{
+                                  backgroundColor: faceNameAssignments[index]
+                                    ? `${getParticipantColor(faceNameAssignments[index])}20`
+                                    : '#f1f5f9'
+                                }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  {result.face ? (
+                                    <img
+                                      src={result.face}
+                                      alt={`顔${index + 1}`}
+                                      className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full bg-slate-300 flex items-center justify-center text-white font-bold">
+                                      {index + 1}
+                                    </div>
+                                  )}
+                                  <div>
+                                    <button
+                                      onClick={() => setShowNameSelector(showNameSelector === index ? null : index)}
+                                      className={`font-medium transition-colors border-b border-dashed ${
+                                        faceNameAssignments[index] 
+                                          ? 'text-slate-800 hover:text-blue-600 border-slate-400 hover:border-blue-600'
+                                          : 'text-slate-500 hover:text-blue-600 border-slate-300 hover:border-blue-600'
+                                      }`}
+                                    >
+                                      {getFaceDisplayName(index)}
+                                    </button>
+                                    <div className="text-xs text-slate-500">
+                                      {result.dominant} (
+                                      {Math.round(result.pay * 100)}%)
+                                    </div>
+                                  </div>
+                                </div>
+                                <span className="text-slate-900 font-semibold">
+                                  ¥{amount.toLocaleString()}
+                                </span>
+                              </div>
+
+                              {/* 名前選択UI */}
+                              {showNameSelector === index && (
+                                <div className="mt-2 p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
+                                  <p className="text-xs text-slate-600 mb-2">参加者を選択:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {getAvailableParticipants().map((participant) => (
+                                      <button
+                                        key={participant.id}
+                                        onClick={() => handleFaceNameAssignment(index, participant.name)}
+                                        className="px-3 py-2 text-sm text-white rounded-full transition-all hover:scale-105 shadow-sm"
+                                        style={{
+                                          backgroundColor: participant.color,
+                                          boxShadow: `0 2px 8px ${participant.color}40`
+                                        }}
+                                      >
+                                        {participant.name}
+                                      </button>
+                                    ))}
+                                    {faceNameAssignments[index] && (
+                                      <button
+                                        onClick={() => handleFaceNameAssignment(index, '')}
+                                        className="px-3 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full transition-all hover:scale-105 shadow-sm"
+                                      >
+                                        削除
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                               )}
-                              <div>
-                                <button
-                                  onClick={() => setShowNameSelector(showNameSelector === index ? null : index)}
-                                  className={`font-medium transition-colors border-b border-dashed ${
-                                    faceNameAssignments[index] 
-                                      ? 'text-slate-800 hover:text-blue-600 border-slate-400 hover:border-blue-600'
-                                      : 'text-slate-500 hover:text-blue-600 border-slate-300 hover:border-blue-600'
-                                  }`}
-                                >
-                                  {getFaceDisplayName(index)}
-                                </button>
-                                <div className="text-xs text-slate-500">
-                                  {result.dominant} (
-                                  {Math.round(result.pay * 100)}%)
-                                </div>
-                              </div>
                             </div>
-                            <span className="text-slate-900 font-semibold">
-                              ¥{amount.toLocaleString()}
-                            </span>
-                          </div>
-
-                          {/* 名前選択UI */}
-                          {showNameSelector === index && (
-                            <div className="mt-2 p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
-                              <p className="text-xs text-slate-600 mb-2">参加者を選択:</p>
-                              <div className="flex flex-wrap gap-2">
-                                {getAvailableParticipants().map((participant) => (
-                                  <button
-                                    key={participant.id}
-                                    onClick={() => handleFaceNameAssignment(index, participant.name)}
-                                    className="px-3 py-2 text-sm text-white rounded-full transition-all hover:scale-105 shadow-sm"
-                                    style={{
-                                      backgroundColor: participant.color,
-                                      boxShadow: `0 2px 8px ${participant.color}40`
-                                    }}
-                                  >
-                                    {participant.name}
-                                  </button>
-                                ))}
-                                {faceNameAssignments[index] && (
-                                  <button
-                                    onClick={() => handleFaceNameAssignment(index, '')}
-                                    className="px-3 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full transition-all hover:scale-105 shadow-sm"
-                                  >
-                                    削除
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        );
-                      })
+                          );
+                        });
+                      })()
                     : // 感情認識結果がない場合は従来通りユーザー名で表示
                       participants.map((participant, index) => (
                         <div
