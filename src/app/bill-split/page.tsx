@@ -1,53 +1,57 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function BillSplitPage() {
   const router = useRouter();
-  const [totalAmount, setTotalAmount] = useState<string>('3000');
+  const [totalAmount, setTotalAmount] = useState<string>("3000");
   const [participants, setParticipants] = useState<any[]>([]);
   const [splitAmount, setSplitAmount] = useState<number>(0);
 
   useEffect(() => {
     // localStorageから参加者情報を取得
-    const savedParticipants = localStorage.getItem('participants');
+    const savedParticipants = localStorage.getItem("participants");
     if (savedParticipants) {
       try {
         const parsed = JSON.parse(savedParticipants);
         setParticipants(parsed);
-        
+
         // 金額を人数で割る
         const amount = parseInt(totalAmount) || 0;
         const perPerson = Math.ceil(amount / parsed.length);
         setSplitAmount(perPerson);
       } catch (error) {
-        console.error('Error loading participants:', error);
+        console.error("Error loading participants:", error);
       }
     }
   }, [totalAmount]);
 
   const handleAmountChange = (value: string) => {
     // 数字のみ許可
-    const numericValue = value.replace(/[^0-9]/g, '');
+    const numericValue = value.replace(/[^0-9]/g, "");
     setTotalAmount(numericValue);
-    
+
     // 金額を再計算
     const amount = parseInt(numericValue) || 0;
-    const perPerson = participants.length > 0 ? Math.ceil(amount / participants.length) : 0;
+    const perPerson =
+      participants.length > 0 ? Math.ceil(amount / participants.length) : 0;
     setSplitAmount(perPerson);
   };
 
   const handleComplete = () => {
     // 割り勘情報を保存
-    localStorage.setItem('billSplitInfo', JSON.stringify({
-      total: totalAmount,
-      perPerson: splitAmount,
-      participants: participants
-    }));
-    
-    router.push('/complete');
+    localStorage.setItem(
+      "billSplitInfo",
+      JSON.stringify({
+        total: totalAmount,
+        perPerson: splitAmount,
+        participants: participants,
+      })
+    );
+
+    router.push("/complete");
   };
 
   return (
@@ -55,15 +59,17 @@ export default function BillSplitPage() {
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="bg-green-500 p-4">
-            <h1 className="text-white text-xl font-bold text-center">割り勘計算</h1>
+            <h1 className="text-white text-xl font-bold text-center">
+              割り勘計算
+            </h1>
           </div>
-          
+
           <div className="p-6">
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">
                 💰 お会計を入力してください
               </h2>
-              
+
               {/* 金額入力 */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -90,7 +96,10 @@ export default function BillSplitPage() {
                 </h3>
                 <div className="space-y-2">
                   {participants.map((participant, index) => (
-                    <div key={participant.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={participant.id || index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
                       <span className="font-medium text-gray-800">
                         {participant.name || `参加者${index + 1}`}
                       </span>
@@ -101,17 +110,6 @@ export default function BillSplitPage() {
                   ))}
                 </div>
               </div>
-
-              {/* 合計表示 */}
-              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-1">一人あたり</p>
-                  <p className="text-3xl font-bold text-green-600">
-                    ¥{splitAmount.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
               <p className="text-xs text-gray-500 text-center">
                 ※ 端数は切り上げて計算しています
               </p>

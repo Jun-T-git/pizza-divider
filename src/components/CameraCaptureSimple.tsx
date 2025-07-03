@@ -9,6 +9,8 @@ import Webcam from "react-webcam";
 export const CameraCaptureSimple: React.FC<CameraProps> = ({
   onCapture,
   onError,
+  isSelfie = false,
+  showGuide = true, // デフォルトはガイド表示
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -39,6 +41,17 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
         return;
       }
 
+      // ガイドが無効な場合は画像をそのまま使用
+      if (!showGuide) {
+        // Base64からFileオブジェクトを作成
+        const response = await fetch(screenshot);
+        const blob = await response.blob();
+        const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        onCapture(file);
+        return;
+      }
+
+      // ガイドが有効な場合は精密なトリミング処理
       // ビデオ要素から自然なサイズを取得
       const videoElement = webcamRef.current.video;
       if (!videoElement) {
@@ -113,7 +126,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
             width: 1920,
             height: 1080,
           }}
-          mirrored={true}
+          mirrored={!isSelfie}
           className="w-full h-full object-cover"
           style={{ transform: "scaleX(-1)" }}
           onUserMediaError={(error) => {
@@ -122,7 +135,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
           }}
         />
 
-        {dimensions.width > 0 && (
+        {dimensions.width > 0 && showGuide && (
           <CircleGuide
             containerWidth={dimensions.width}
             containerHeight={dimensions.height}
