@@ -231,9 +231,9 @@ export default function ScorePage() {
             )}
 
             <div className="space-y-3">
-              <Link href="/">
+              <Link href="/roulette">
                 <button className="w-full py-4 px-6 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors shadow-lg">
-                  新しいピザを分割する
+                  ルーレットへ進む
                 </button>
               </Link>
 
