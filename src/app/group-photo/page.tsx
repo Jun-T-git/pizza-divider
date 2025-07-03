@@ -1,6 +1,7 @@
 "use client";
 
 import { CameraCaptureSimple } from "@/components/CameraCaptureSimple";
+import { ImageUpload } from "@/components/ImageUpload";
 import { Header } from "@/components/Header";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,7 +9,7 @@ import { useState } from "react";
 
 export default function GroupPhotoPage() {
   const router = useRouter();
-  const [showCamera, setShowCamera] = useState(false);
+  const [mode, setMode] = useState<'camera' | 'upload' | 'select'>('select');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const callEmotionAPI = async (imageFile: File) => {
@@ -122,14 +123,10 @@ export default function GroupPhotoPage() {
 
   const handleError = (error: string) => {
     console.error("Camera error:", error);
-    setShowCamera(false);
+    setMode('select');
   };
 
-  const startCamera = () => {
-    setShowCamera(true);
-  };
-
-  if (showCamera) {
+  if (mode === 'camera') {
     return (
       <div className="relative">
         <div className="absolute top-4 left-4 right-4 z-10">
@@ -148,6 +145,28 @@ export default function GroupPhotoPage() {
           onError={handleError}
           showGuide={true}
           guideType="group-photo"
+        />
+
+        {isProcessing && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+            <div className="bg-white rounded-lg p-6 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-3"></div>
+              <p className="text-slate-600">感情を分析中...</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (mode === 'upload') {
+    return (
+      <div className="relative">
+        <ImageUpload
+          onCapture={handleCapture}
+          onError={handleError}
+          title="集合写真"
+          description="みんなでピザを囲んだ記念写真をアップロードしてください"
         />
 
         {isProcessing && (
@@ -194,14 +213,21 @@ export default function GroupPhotoPage() {
 
             <div className="space-y-3">
               <button
-                onClick={startCamera}
+                onClick={() => setMode('camera')}
                 className="w-full py-4 px-6 rounded-xl font-medium text-lg transition-all bg-slate-900 hover:bg-slate-800 hover:scale-105 text-white shadow-sm"
               >
-                撮影する
+                📷 カメラで撮影
+              </button>
+
+              <button
+                onClick={() => setMode('upload')}
+                className="w-full py-3 px-6 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
+              >
+                📁 ファイルをアップロード
               </button>
 
               <Link href="/bill-split">
-                <button className="w-full py-3 px-6 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
+                <button className="w-full py-2 px-6 rounded-xl border border-slate-200 text-slate-500 text-sm font-medium hover:bg-slate-50 transition-colors">
                   スキップして次へ
                 </button>
               </Link>

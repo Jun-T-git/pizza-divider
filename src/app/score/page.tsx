@@ -45,7 +45,10 @@ export default function ScorePage() {
           setScore(parseFloat(savedFairnessScore));
         } else {
           // フォールバック: 既存のcalculateScore APIを使用
-          const createFileFromData = (imageData: string, fileInfoStr: string) => {
+          const createFileFromData = (
+            imageData: string,
+            fileInfoStr: string
+          ) => {
             const fileInfo = JSON.parse(fileInfoStr);
             const base64Data = imageData.split(",")[1];
             const byteCharacters = atob(base64Data);
@@ -197,9 +200,9 @@ export default function ScorePage() {
           <div className="p-6">
             <div className="text-center mb-6">
               <div
-                className={`text-6xl font-bold mb-2 ${getScoreColor(score)}`}
+                className={`text-5xl font-bold mb-2 ${getScoreColor(score)}`}
               >
-                {score}点
+                {Math.floor(score)}点
               </div>
               <p className="text-lg text-gray-700 font-medium">
                 {getScoreMessage(score)}
