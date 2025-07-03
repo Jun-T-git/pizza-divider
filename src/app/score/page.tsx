@@ -1,12 +1,7 @@
 "use client";
 
 import { Header } from "@/components/Header";
-import {
-  calculateScore,
-  // generateUUID,
-  // saveScore,
-  // userApi,
-} from "@/utils/apiClient";
+import { calculateScore } from "@/utils/apiClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -295,7 +290,7 @@ export default function ScorePage() {
             <div className="space-y-3">
               <Link href="/roulette">
                 <button className="w-full py-4 px-6 my-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-all hover:scale-105 shadow-sm">
-                  ルーレットへ進む
+                  食べるピザを選ぶ
                 </button>
               </Link>
 
