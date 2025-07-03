@@ -29,6 +29,7 @@ export interface CameraProps {
   onError?: (error: string) => void;
   isSelfie?: boolean; // カメラの向きを指定するオプション
   showGuide?: boolean; // 円形ガイドの表示制御
+  overlayImage?: string | null; // SVGオーバーレイ画像
 }
 
 export interface DivisionOverlayProps {
@@ -83,5 +84,11 @@ export interface PizzaCutterResponse {
   svg_animated: string;
   piece_svgs: string[];
   overlay_image: string;
+  error_message: string;
+}
+
+export interface PizzaScoreResponse {
+  success: boolean;
+  fairness_score: number;
   error_message: string;
 }

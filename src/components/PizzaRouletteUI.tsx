@@ -25,33 +25,9 @@ interface User {
   assignedPiece?: PizzaPiece;
 }
 
-// サンプルデータ
-const initialPieces: PizzaPiece[] = [
-  {
-    id: 1,
-    imageUrl: "/pieces/piece1.svg",
-    isAssigned: false,
-  },
-  {
-    id: 2,
-    imageUrl: "/pieces/piece2.svg",
-    isAssigned: false,
-  },
-  {
-    id: 3,
-    imageUrl: "/pieces/piece3.svg",
-    isAssigned: false,
-  },
-  {
-    id: 4,
-    imageUrl: "/pieces/piece4.svg",
-    isAssigned: false,
-  },
-];
-
 const PizzaRouletteUI: React.FC = () => {
   const router = useRouter();
-  const [pieces, setPieces] = useState<PizzaPiece[]>(initialPieces);
+  const [pieces, setPieces] = useState<PizzaPiece[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [assignments, setAssignments] = useState<{ [pieceId: number]: User }>(
@@ -71,26 +47,32 @@ const PizzaRouletteUI: React.FC = () => {
   console.log("Current users:", users);
   console.log("Current assignments:", assignments);
 
-  // SVGコンテンツを読み込む
+  // pizzaCutterResultsからpiece_svgsを読み込む
   useEffect(() => {
-    const loadSvgContents = async () => {
-      const contents: { [pieceId: number]: string } = {};
-
-      for (const piece of pieces) {
-        try {
-          const response = await fetch(piece.imageUrl);
-          const svgText = await response.text();
-          contents[piece.id] = svgText;
-        } catch (error) {
-          console.error(`Failed to load SVG for piece ${piece.id}:`, error);
+    const pizzaCutterResults = localStorage.getItem("pizzaCutterResults");
+    if (pizzaCutterResults) {
+      try {
+        const results = JSON.parse(pizzaCutterResults);
+        if (results.success && results.piece_svgs && Array.isArray(results.piece_svgs)) {
+          const loadedPieces = results.piece_svgs.map((svg: string, index: number) => ({
+            id: index + 1,
+            imageUrl: `data:image/svg+xml;base64,${btoa(svg)}`,
+            isAssigned: false,
+          }));
+          setPieces(loadedPieces);
+          
+          // SVGコンテンツを直接設定
+          const contents: { [pieceId: number]: string } = {};
+          results.piece_svgs.forEach((svg: string, index: number) => {
+            contents[index + 1] = svg;
+          });
+          setSvgContents(contents);
         }
+      } catch (error) {
+        console.error("Error loading pizza cutter results:", error);
       }
-
-      setSvgContents(contents);
-    };
-
-    loadSvgContents();
-  }, [pieces]);
+    }
+  }, []);
 
   // 初期状態でピザらしい色を設定
   useEffect(() => {
@@ -229,11 +211,10 @@ const PizzaRouletteUI: React.FC = () => {
 
   // 分配リセット機能
   const resetAssignments = () => {
-    setPieces(initialPieces);
     setAssignments({});
     // 初期色をピザらしいオレンジに設定
     const initialColors: { [pieceId: number]: string } = {};
-    initialPieces.forEach((piece) => {
+    pieces.forEach((piece) => {
       initialColors[piece.id] = "orange";
     });
     setPieceColors(initialColors);
@@ -241,6 +222,14 @@ const PizzaRouletteUI: React.FC = () => {
     setCurrentStep(0);
     setIsSpinning(false);
     setIsColorAnimating(false);
+    // piecesの状態をリセット
+    setPieces((prev) =>
+      prev.map((piece) => ({
+        ...piece,
+        isAssigned: false,
+        assignedTo: undefined,
+      }))
+    );
   };
 
   return (
