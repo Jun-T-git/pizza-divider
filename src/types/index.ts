@@ -27,6 +27,8 @@ export interface AppState {
 export interface CameraProps {
   onCapture: (imageFile: File) => void;
   onError?: (error: string) => void;
+  isSelfie?: boolean; // カメラの向きを指定するオプション
+  showGuide?: boolean; // 円形ガイドの表示制御
 }
 
 export interface DivisionOverlayProps {
