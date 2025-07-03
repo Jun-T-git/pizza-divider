@@ -1,9 +1,14 @@
 "use client";
 
+import {
+  AVAILABLE_COLOR_NAMES,
+  COLOR_DEFINITIONS,
+  HEX_TO_COLOR_NAME,
+} from "@/utils/colorDefinitions";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { Header } from "./Header";
 import PizzaPieces from "./PizzaPieces";
-import { COLOR_DEFINITIONS, HEX_TO_COLOR_NAME, AVAILABLE_COLOR_NAMES } from "@/utils/colorDefinitions";
 
 // 型定義
 interface PizzaPiece {
@@ -24,26 +29,25 @@ interface User {
 const initialPieces: PizzaPiece[] = [
   {
     id: 1,
-    imageUrl: "/pieces/piece_0.svg",
+    imageUrl: "/pieces/piece1.svg",
     isAssigned: false,
   },
   {
     id: 2,
-    imageUrl: "/pieces/piece_1.svg",
+    imageUrl: "/pieces/piece2.svg",
     isAssigned: false,
   },
   {
     id: 3,
-    imageUrl: "/pieces/piece_2.svg",
+    imageUrl: "/pieces/piece3.svg",
     isAssigned: false,
   },
   {
     id: 4,
-    imageUrl: "/pieces/piece_3.svg",
+    imageUrl: "/pieces/piece4.svg",
     isAssigned: false,
   },
 ];
-
 
 const PizzaRouletteUI: React.FC = () => {
   const router = useRouter();
@@ -55,12 +59,68 @@ const PizzaRouletteUI: React.FC = () => {
   );
   const [isCompleted, setIsCompleted] = useState(false);
   const [, setCurrentStep] = useState(0);
-  const [pieceColors, setPieceColors] = useState<{ [pieceId: number]: string }>({});
+  const [pieceColors, setPieceColors] = useState<{ [pieceId: number]: string }>(
+    {}
+  );
   const [isColorAnimating, setIsColorAnimating] = useState(false);
+  const [svgContents, setSvgContents] = useState<{ [pieceId: number]: string }>(
+    {}
+  );
 
   // デバッグ用ログ
   console.log("Current users:", users);
   console.log("Current assignments:", assignments);
+
+  // SVGコンテンツを読み込む
+  useEffect(() => {
+    const loadSvgContents = async () => {
+      const contents: { [pieceId: number]: string } = {};
+
+      for (const piece of pieces) {
+        try {
+          const response = await fetch(piece.imageUrl);
+          const svgText = await response.text();
+          contents[piece.id] = svgText;
+        } catch (error) {
+          console.error(`Failed to load SVG for piece ${piece.id}:`, error);
+        }
+      }
+
+      setSvgContents(contents);
+    };
+
+    loadSvgContents();
+  }, [pieces]);
+
+  // 初期状態でピザらしい色を設定
+  useEffect(() => {
+    if (pieces.length > 0 && Object.keys(pieceColors).length === 0) {
+      const initialColors: { [pieceId: number]: string } = {};
+      pieces.forEach((piece) => {
+        initialColors[piece.id] = "orange"; // ピザらしいオレンジ色
+      });
+      setPieceColors(initialColors);
+    }
+  }, [pieces, pieceColors]);
+
+  // SVGから背景を削除して透過にし、色を適用
+  const makeBackgroundTransparent = (svgContent: string): string => {
+    return svgContent
+      .replace(/<rect\s+fill="white"\s+[^>]*\/>/g, "") // 白い背景のrectを削除
+      .replace(/<rect\s+[^>]*fill="white"[^>]*\/>/g, "") // fill="white"の順序違いにも対応
+      .replace(
+        /<svg([^>]*)>/g,
+        '<svg$1 style="width: 100%; height: 100%; max-width: 100%; max-height: 100%;">'
+      ); // SVGサイズ制御を追加
+  };
+
+  // 色名からHEX値を取得
+  const getColorHex = (colorName: string): string => {
+    return (
+      COLOR_DEFINITIONS[colorName as keyof typeof COLOR_DEFINITIONS]?.hex ||
+      "#d4a574"
+    ); // ピザクラストっぽい茶色
+  };
 
   // localStorage から参加者情報を取得
   useEffect(() => {
@@ -71,11 +131,16 @@ const PizzaRouletteUI: React.FC = () => {
         if (Array.isArray(participants) && participants.length > 0) {
           const loadedUsers = participants
             .filter((p) => p && (p.id || p.name)) // 有効な参加者のみ
-            .map((p: { id?: number; name?: string; color?: string }, index: number) => ({
-              id: p.id || index + 1,
-              nickname: p.name || `参加者${p.id || index + 1}`,
-              color: p.color || "#ef4444", // 色情報を保持（デフォルトは赤）
-            }));
+            .map(
+              (
+                p: { id?: number; name?: string; color?: string },
+                index: number
+              ) => ({
+                id: p.id || index + 1,
+                nickname: p.name || `参加者${p.id || index + 1}`,
+                color: p.color || "#ef4444", // 色情報を保持（デフォルトは赤）
+              })
+            );
 
           if (loadedUsers.length > 0) {
             setUsers(loadedUsers);
@@ -90,8 +155,8 @@ const PizzaRouletteUI: React.FC = () => {
     }
   }, [router]);
 
-  // ワクワクするアニメーション付きルーレット機能
-  const startRoulette = () => {
+  // 平等なピース分配機能
+  const startDistribution = () => {
     if (!users || users.length === 0) {
       console.error("ユーザーが設定されていません");
       return;
@@ -100,51 +165,56 @@ const PizzaRouletteUI: React.FC = () => {
     setIsSpinning(true);
     setIsColorAnimating(true);
 
-
     // シャッフルしたユーザー配列を作成
     const validUsers = users.filter((user) => user && user.id);
     const shuffledUsers = [...validUsers].sort(() => Math.random() - 0.5);
 
-    // 各ピースにユーザーを割り当て（ユーザーの色も一緒に設定）
+    // 各ピースにユーザーを公平に分配（ユーザーの色も一緒に設定）
     const newAssignments: { [pieceId: number]: User } = {};
     const finalColors: { [pieceId: number]: string } = {};
-    
+
     pieces.forEach((piece, index) => {
       if (shuffledUsers[index % shuffledUsers.length]) {
         const assignedUser = shuffledUsers[index % shuffledUsers.length];
         newAssignments[piece.id] = assignedUser;
         // ユーザーの色からピースの色を決定（マッピングにない場合はランダム）
-        finalColors[piece.id] = HEX_TO_COLOR_NAME[assignedUser.color] || 
-          AVAILABLE_COLOR_NAMES[Math.floor(Math.random() * AVAILABLE_COLOR_NAMES.length)];
+        finalColors[piece.id] =
+          HEX_TO_COLOR_NAME[assignedUser.color] ||
+          AVAILABLE_COLOR_NAMES[
+            Math.floor(Math.random() * AVAILABLE_COLOR_NAMES.length)
+          ];
       }
     });
 
     // カラーアニメーション（高速で色が変わる）
     let colorAnimationCount = 0;
     const maxColorAnimations = 20; // 2秒間で20回色変更
-    
+
     const colorInterval = setInterval(() => {
       const tempColors: { [pieceId: number]: string } = {};
       pieces.forEach((piece) => {
-        tempColors[piece.id] = AVAILABLE_COLOR_NAMES[Math.floor(Math.random() * AVAILABLE_COLOR_NAMES.length)];
+        tempColors[piece.id] =
+          AVAILABLE_COLOR_NAMES[
+            Math.floor(Math.random() * AVAILABLE_COLOR_NAMES.length)
+          ];
       });
       setPieceColors(tempColors);
-      
+
       colorAnimationCount++;
       if (colorAnimationCount >= maxColorAnimations) {
         clearInterval(colorInterval);
-        
+
         // 最終的な色を設定
         setPieceColors(finalColors);
         setIsColorAnimating(false);
-        
-        // 少し遅らせてユーザー割り当てを表示
+
+        // 少し遅らせてユーザー分配結果を表示
         setTimeout(() => {
           setAssignments(newAssignments);
           setIsSpinning(false);
           setIsCompleted(true);
 
-          // ピースを割り当て済みに更新
+          // ピースを分配済みに更新
           setPieces((prev) =>
             prev.map((piece) => ({
               ...piece,
@@ -157,11 +227,16 @@ const PizzaRouletteUI: React.FC = () => {
     }, 100); // 100ms間隔で色変更
   };
 
-  // リセット機能
+  // 分配リセット機能
   const resetAssignments = () => {
     setPieces(initialPieces);
     setAssignments({});
-    setPieceColors({});
+    // 初期色をピザらしいオレンジに設定
+    const initialColors: { [pieceId: number]: string } = {};
+    initialPieces.forEach((piece) => {
+      initialColors[piece.id] = "orange";
+    });
+    setPieceColors(initialColors);
     setIsCompleted(false);
     setCurrentStep(0);
     setIsSpinning(false);
@@ -169,67 +244,81 @@ const PizzaRouletteUI: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-orange-800 mb-8">
-          🍕 ピザルーレット
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Header />
+
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-medium text-slate-800 mb-2">
+            ピザの分け方を決めよう
+          </h2>
+          <p className="text-slate-600 text-sm">
+            誰がどの部分を食べるか決めましょう
+          </p>
+        </div>
 
         {/* ピザビジュアライゼーション */}
-        <div className="bg-white rounded-lg shadow-lg p-4 md:p-8 mb-8">
-          <div className={`transition-all duration-300 ${isColorAnimating ? 'animate-pulse scale-105' : ''}`}>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-8 sm:mb-12">
+          <div
+            className={`transition-all duration-500 ${
+              isColorAnimating ? "scale-105" : ""
+            }`}
+          >
             <PizzaPieces pieces={pieces} pieceColors={pieceColors} />
           </div>
-          
+
           {/* カラーアニメーション中の表示 */}
           {isColorAnimating && (
-            <div className="text-center mt-4">
-              <div className="inline-flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
-                <span className="text-lg font-semibold text-red-600 animate-bounce">
-                  🎨 色を決めています...
+            <div className="text-center mt-6 sm:mt-8">
+              <div className="inline-flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-300 border-t-slate-600"></div>
+                <span className="text-slate-600 font-medium">
+                  誰がどこを食べるか決めています...
                 </span>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
               </div>
             </div>
           )}
         </div>
 
         {/* コントロールパネル */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
           {!isCompleted && !isSpinning && (
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                ピースを割り当てましょう！
-              </h2>
+            <div className="text-center p-8 sm:p-12">
               <button
-                onClick={startRoulette}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-all transform hover:scale-105 animate-pulse"
+                onClick={startDistribution}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-medium py-4 px-8 rounded-xl text-lg transition-all duration-200 hover:scale-105 shadow-sm"
               >
-                🎯 ワクワクルーレット開始
+                みんなで分け方を決める
               </button>
             </div>
           )}
 
           {isSpinning && (
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+            <div className="text-center p-8 sm:p-12">
+              <div className="flex items-center justify-center mb-6">
+                <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 border-t-slate-600"></div>
               </div>
-              <p className="text-xl text-gray-700 font-semibold animate-bounce">
-                {isColorAnimating ? '🌈 色をランダム選択中...' : '👥 ユーザーを割り当て中...'}
+              <p className="text-slate-600 font-medium">
+                {isColorAnimating
+                  ? "誰がどこを食べるか決めています..."
+                  : "分け方を決めています..."}
               </p>
             </div>
           )}
 
           {isCompleted && (
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-green-600 mb-6">
-                🎉 割り当て完了！
-              </h2>
+            <div className="p-6 sm:p-8">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl sm:text-3xl font-light text-slate-800 mb-2">
+                  分け方が決まりました！
+                </h2>
+                <p className="text-slate-600">
+                  みんなの食べる部分が決まりました
+                </p>
+              </div>
 
               {/* ユーザー別結果表示 */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="space-y-3 mb-8">
                 {users
                   .filter((user) => user && user.id)
                   .map((user) => {
@@ -243,61 +332,96 @@ const PizzaRouletteUI: React.FC = () => {
                     return (
                       <div
                         key={user.id}
-                        className="border-2 rounded-lg p-4 transition-all hover:scale-105 animate-fadeIn"
-                        style={{ borderColor: user.color || "#gray" }}
+                        className="px-4 transition-all duration-200"
                       >
-                        <div
-                          className="w-8 h-8 rounded-full mx-auto mb-2"
-                          style={{ backgroundColor: user.color || "#gray" }}
-                        ></div>
-                        <div className="font-bold text-gray-800 mb-2">
-                          {user.nickname || "Unknown"}
-                        </div>
-                        {assignedPiece && (
-                          <div className="w-16 h-16 mx-auto mb-2">
-                            <img
-                              src={assignedPiece.imageUrl}
-                              alt={`ピース${assignedPiece.id}`}
-                              className="w-full h-full object-contain"
-                              style={{
-                                filter: pieceColors[assignedPiece.id] 
-                                  ? `hue-rotate(${getHueRotation(pieceColors[assignedPiece.id])}deg) saturate(1.5)` 
-                                  : 'none'
-                              }}
-                            />
+                        <div className="flex items-center gap-4">
+                          {assignedPiece && (
+                            <div className="w-12 h-12 relative overflow-visible flex-shrink-0">
+                              {svgContents[assignedPiece.id] ? (
+                                <div
+                                  className="w-full h-full border border-dashed border-gray-300"
+                                  style={{
+                                    color: pieceColors[assignedPiece.id]
+                                      ? getColorHex(
+                                          pieceColors[assignedPiece.id]
+                                        )
+                                      : "#d4a574",
+                                  }}
+                                  dangerouslySetInnerHTML={{
+                                    __html: makeBackgroundTransparent(
+                                      svgContents[assignedPiece.id]
+                                    ),
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+                                  ...
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          <div className="font-medium text-slate-800">
+                            {user.nickname || "Unknown"}
                           </div>
-                        )}
-                        <div className="text-sm text-gray-600">
-                          ピース {assignedPieceId || "?"}
                         </div>
-                        {pieceColors[Number(assignedPieceId)] && (
-                          <div 
-                            className="text-xs font-medium mt-1" 
-                            style={{ 
-                              color: COLOR_DEFINITIONS[pieceColors[Number(assignedPieceId)] as keyof typeof COLOR_DEFINITIONS]?.hex || '#000' 
-                            }}
-                          >
-                            🎨 {pieceColors[Number(assignedPieceId)]}
-                          </div>
-                        )}
                       </div>
                     );
                   })}
               </div>
 
-              <div className="space-y-3">
+              <div className="bg-blue-50 rounded-xl p-4 mb-6">
+                <div className="text-center">
+                  <p className="text-sm text-slate-600 mb-4">
+                    ピザパーティーの様子を写真におさめましょう！
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={() => router.push("/group-photo")}
-                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105"
+                  className="bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-sm flex items-center justify-center gap-2"
                 >
-                  📸 集合写真へ進む
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  みんなで記念写真を撮る
                 </button>
 
                 <button
                   onClick={resetAssignments}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full transition-all transform hover:scale-105"
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center gap-2"
                 >
-                  🔄 もう一度
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  もう一度決め直す
                 </button>
               </div>
             </div>
@@ -306,21 +430,6 @@ const PizzaRouletteUI: React.FC = () => {
       </div>
     </div>
   );
-};
-
-// 色名からhue-rotate値を計算
-const getHueRotation = (colorName: string): number => {
-  const hueMap: { [key: string]: number } = {
-    red: 0,
-    orange: 30,
-    yellow: 60,
-    green: 120,
-    cyan: 180,
-    blue: 240,
-    purple: 270,
-    pink: 320
-  };
-  return hueMap[colorName] || 0;
 };
 
 export default PizzaRouletteUI;

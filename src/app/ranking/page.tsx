@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getRanking } from '@/utils/apiClient';
 import { RankingEntry } from '@/types';
+import { Header } from '@/components/Header';
 
 export default function RankingPage() {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
@@ -61,11 +62,14 @@ export default function RankingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-500 mx-auto mb-6"></div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">ランキング読み込み中...</h2>
-          <p className="text-gray-600">最新のスコアを取得しています</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <Header />
+        <div className="flex items-center justify-center pt-32">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-medium text-slate-800 mb-2">ランキング読み込み中...</h2>
+            <p className="text-slate-600">最新のスコアを取得しています</p>
+          </div>
         </div>
       </div>
     );
@@ -73,29 +77,39 @@ export default function RankingPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-6">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">エラーが発生しました</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <Link href="/">
-            <button className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg transition-colors">
-              ホームに戻る
-            </button>
-          </Link>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <Header />
+        <div className="flex items-center justify-center pt-32 p-6">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-xl font-medium text-slate-800 mb-4">エラーが発生しました</h2>
+            <p className="text-slate-600 mb-6">{error}</p>
+            <Link href="/">
+              <button className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl transition-all hover:scale-105 shadow-sm">
+                ホームに戻る
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
-      <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-purple-500 p-4">
-            <h1 className="text-white text-xl font-bold text-center">🏆 ランキング</h1>
-          </div>
-          
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Header />
+      
+      <div className="max-w-lg mx-auto p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-medium text-slate-800 mb-2">
+            🏆 ランキング
+          </h2>
+          <p className="text-slate-600 text-sm">
+            トップスコアランキング
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-6">
             {userRank && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
