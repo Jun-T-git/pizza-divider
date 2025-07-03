@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
+import { PizzaCutterResponse } from "@/types";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function SettingsPage() {
       return;
     }
     setImageUrl(savedImage);
+
+    // settingsページではオーバーレイは表示しない（resultページで表示）
   }, [router]);
 
   const handleNameChange = (id: number, name: string) => {
@@ -71,6 +74,103 @@ export default function SettingsPage() {
     return participants.filter((p) => p.active && p.name.trim() !== "");
   };
 
+  const callPizzaCutterAPI = async (participantCount: number) => {
+    try {
+      const savedImageFile = localStorage.getItem("pizzaImageFile");
+      if (!savedImageFile) {
+        throw new Error("画像ファイル情報が見つかりません");
+      }
+
+      const imageFileInfo = JSON.parse(savedImageFile);
+      const savedImage = localStorage.getItem("pizzaImage");
+      if (!savedImage) {
+        throw new Error("画像データが見つかりません");
+      }
+
+      // Base64データをBlobに変換
+      const base64Data = savedImage.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const imageFile = new File([byteArray], imageFileInfo.name, { type: imageFileInfo.type });
+
+      // 開発環境かどうかをチェック
+      if (process.env.NODE_ENV === "development") {
+        // 開発環境では localhost:9000 のAPIを呼び出す
+        try {
+          const formData = new FormData();
+          formData.append("file", imageFile);
+          formData.append("n_pieces", participantCount.toString());
+
+          const apiUrl = "http://localhost:9000/api/pizza-cutter/divide";
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const cutterData: PizzaCutterResponse = await response.json();
+          localStorage.setItem("pizzaCutterResults", JSON.stringify(cutterData));
+          console.log("ピザカッター結果:", cutterData);
+          return cutterData;
+        } catch (apiError) {
+          console.error("開発API呼び出しエラー、スタブデータを使用:", apiError);
+          // API呼び出し失敗時はスタブデータを使用
+        }
+      }
+
+      if (process.env.NODE_ENV === "production") {
+        // 本番環境では実際のAPIを呼び出す
+        try {
+          const formData = new FormData();
+          formData.append("file", imageFile);
+          formData.append("n_pieces", participantCount.toString());
+
+          const apiUrl = "https://rocket2025-backend.onrender.com/api/pizza-cutter/divide";
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const cutterData: PizzaCutterResponse = await response.json();
+          localStorage.setItem("pizzaCutterResults", JSON.stringify(cutterData));
+          console.log("ピザカッター結果:", cutterData);
+          return cutterData;
+        } catch (apiError) {
+          console.error("本番API呼び出しエラー、スタブデータを使用:", apiError);
+        }
+      }
+
+      // スタブデータを使用（テスト用の簡単なオーバーレイ画像）
+      const stubResponse: PizzaCutterResponse = {
+        success: true,
+        svg_before_explosion: "",
+        svg_after_explosion: "",
+        svg_animated: "",
+        piece_svgs: [],
+        overlay_image: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==", // 透明な1x1ピクセル画像（テスト用）
+        error_message: ""
+      };
+
+      localStorage.setItem("pizzaCutterResults", JSON.stringify(stubResponse));
+      console.log("ピザカッター結果（スタブ）:", stubResponse);
+      return stubResponse;
+    } catch (error) {
+      console.error("ピザカッターAPI呼び出しエラー:", error);
+      throw error;
+    }
+  };
+
   const handleCalculateDivision = async () => {
     const activeParticipants = getActiveParticipants();
 
@@ -85,7 +185,8 @@ export default function SettingsPage() {
       localStorage.setItem("peopleCount", activeParticipants.length.toString());
       localStorage.setItem("participants", JSON.stringify(activeParticipants));
 
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // ピザカッターAPIを呼び出し
+      await callPizzaCutterAPI(activeParticipants.length);
 
       router.push("/result");
     } catch (error) {

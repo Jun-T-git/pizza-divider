@@ -33,9 +33,7 @@ export interface CameraProps {
 
 export interface DivisionOverlayProps {
   imageUrl: string;
-  idealSvg?: string;
-  divisionLines?: Line[];
-  salamiPositions?: Point[];
+  overlayImage?: string;
   pieceValues?: number[];
 }
 
@@ -76,4 +74,14 @@ export interface RankingEntry {
 
 export interface RankingResponse {
   ranking: RankingEntry[];
+}
+
+export interface PizzaCutterResponse {
+  success: boolean;
+  svg_before_explosion: string;
+  svg_after_explosion: string;
+  svg_animated: string;
+  piece_svgs: string[];
+  overlay_image: string;
+  error_message: string;
 }
