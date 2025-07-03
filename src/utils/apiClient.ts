@@ -95,10 +95,11 @@ export const calculateIdealCut = async (
 };
 
 // 2. スコア計算
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const calculateScore = async (
-  actualImage: File,
-  idealImage: File
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _actualImage: File,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _idealImage: File
 ): Promise<CalculateScoreResponse> => {
   // スタブ実装 - 実際のAPIは未実装
   await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -137,11 +138,13 @@ export const calculateScore = async (
 };
 
 // 3. スコア保存
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const saveScore = async (
-  accountName: string,
-  uuid: string,
-  score: number
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _accountName: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _uuid: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _score: number
 ): Promise<SaveScoreResponse> => {
   // スタブ実装 - 実際のAPIは未実装
   await new Promise((resolve) => setTimeout(resolve, 800));
