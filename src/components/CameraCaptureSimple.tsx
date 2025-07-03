@@ -11,6 +11,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
   onError,
   isSelfie = false,
   showGuide = true, // デフォルトはガイド表示
+  overlayImage = null, // SVGオーバーレイ画像
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -137,12 +138,26 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
           }}
         />
 
-        {dimensions.width > 0 && showGuide && (
+        {dimensions.width > 0 && showGuide && !overlayImage && (
           <CircleGuide
             containerWidth={dimensions.width}
             containerHeight={dimensions.height}
             guideRatio={0.7}
           />
+        )}
+
+        {dimensions.width > 0 && overlayImage && showGuide && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <img
+              src={`data:image/svg+xml;base64,${btoa(overlayImage)}`}
+              alt="Pizza Division Guide"
+              className="object-contain"
+              style={{
+                width: Math.min(dimensions.width, dimensions.height) * 0.7,
+                height: Math.min(dimensions.width, dimensions.height) * 0.7,
+              }}
+            />
+          </div>
         )}
       </div>
 

@@ -38,34 +38,41 @@ export default function ScorePage() {
         setBeforeImage(savedBeforeImage);
         setAfterImage(savedAfterImage);
 
-        // File オブジェクトを再構築
-        const createFileFromData = (imageData: string, fileInfoStr: string) => {
-          const fileInfo = JSON.parse(fileInfoStr);
-          const base64Data = imageData.split(",")[1];
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: fileInfo.type });
-          return new File([blob], fileInfo.name, {
-            type: fileInfo.type,
-            lastModified: fileInfo.lastModified,
-          });
-        };
+        // APIから取得した公平性スコアをチェック
+        const savedFairnessScore = localStorage.getItem("fairnessScore");
+        if (savedFairnessScore) {
+          // APIから取得したスコアを使用
+          setScore(parseFloat(savedFairnessScore));
+        } else {
+          // フォールバック: 既存のcalculateScore APIを使用
+          const createFileFromData = (imageData: string, fileInfoStr: string) => {
+            const fileInfo = JSON.parse(fileInfoStr);
+            const base64Data = imageData.split(",")[1];
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: fileInfo.type });
+            return new File([blob], fileInfo.name, {
+              type: fileInfo.type,
+              lastModified: fileInfo.lastModified,
+            });
+          };
 
-        const beforeFile = createFileFromData(
-          savedBeforeImage,
-          savedBeforeImageFile
-        );
-        const afterFile = createFileFromData(
-          savedAfterImage,
-          savedAfterImageFile
-        );
+          const beforeFile = createFileFromData(
+            savedBeforeImage,
+            savedBeforeImageFile
+          );
+          const afterFile = createFileFromData(
+            savedAfterImage,
+            savedAfterImageFile
+          );
 
-        const response = await calculateScore(afterFile, beforeFile);
-        setScore(response.score);
+          const response = await calculateScore(afterFile, beforeFile);
+          setScore(response.score);
+        }
       } catch (err) {
         console.error("Error evaluating division:", err);
         setError("評価の計算に失敗しました");
