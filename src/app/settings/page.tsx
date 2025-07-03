@@ -7,6 +7,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Header } from "@/components/Header";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -97,24 +98,33 @@ export default function SettingsPage() {
 
   if (!imageUrl) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">画像を読み込み中...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <Header />
+        <div className="flex items-center justify-center pt-32">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">画像を読み込み中...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-lg mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Header />
+      
+      <div className="max-w-lg mx-auto p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-medium text-slate-800 mb-2">
+            分割設定
+          </h2>
+          <p className="text-slate-600 text-sm">
+            参加者を設定してピザを分割しましょう
+          </p>
+        </div>
+
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200">
-            <h1 className="text-slate-800 text-2xl font-light text-center">
-              分割設定
-            </h1>
-          </div>
 
           <div className="p-6">
             <div className="mb-8">

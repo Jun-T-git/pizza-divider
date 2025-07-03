@@ -1,6 +1,7 @@
 "use client";
 
 import { CameraCaptureSimple } from "@/components/CameraCaptureSimple";
+import { Header } from "@/components/Header";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -67,21 +68,22 @@ export default function GroupPhotoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200">
-            <h1 className="text-slate-800 text-2xl font-light text-center">
-              集合写真
-            </h1>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Header />
+      
+      <div className="max-w-lg mx-auto p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-medium text-slate-800 mb-2">
+            集合写真
+          </h2>
+          <p className="text-slate-600 text-sm">
+            みんなで記念撮影をしましょう
+          </p>
+        </div>
 
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-6">
             <div className="mb-8">
-              <h2 className="text-lg font-medium text-slate-800 mb-6 text-center">
-                みんなで記念撮影
-              </h2>
-
               {/* カメラプレビューエリア */}
               <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm bg-slate-50 mb-6">
                 <div className="absolute inset-0 flex items-center justify-center">

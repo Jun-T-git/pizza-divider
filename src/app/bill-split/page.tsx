@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Header } from "@/components/Header";
 
 export default function BillSplitPage() {
   const router = useRouter();
@@ -55,20 +56,22 @@ export default function BillSplitPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200">
-            <h1 className="text-slate-800 text-2xl font-light text-center">
-              割り勘計算
-            </h1>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Header />
+      
+      <div className="max-w-lg mx-auto p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-medium text-slate-800 mb-2">
+            割り勘計算
+          </h2>
+          <p className="text-slate-600 text-sm">
+            お会計を入力してください
+          </p>
+        </div>
 
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-6">
             <div className="mb-8">
-              <h2 className="text-lg font-medium text-slate-800 mb-6">
-                お会計を入力してください
-              </h2>
 
               {/* 金額入力 */}
               <div className="mb-6">
