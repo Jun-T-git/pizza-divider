@@ -16,6 +16,11 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
   const webcamRef = useRef<Webcam>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [currentFacingMode, setCurrentFacingMode] = useState<"user" | "environment">(
+    isSelfie ? "user" : "environment"
+  );
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined);
   const preciseGuideManager = new PreciseCameraGuideManager();
 
   useEffect(() => {
@@ -30,6 +35,33 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    const getVideoDevices = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter(device => device.kind === 'videoinput');
+        setVideoDevices(videoInputs);
+        console.log('Available cameras:', videoInputs);
+      } catch (error) {
+        console.error('Error getting video devices:', error);
+      }
+    };
+
+    getVideoDevices();
+  }, []);
+
+  const toggleCamera = () => {
+    if (videoDevices.length > 1) {
+      const currentIndex = videoDevices.findIndex(device => device.deviceId === currentDeviceId);
+      const nextIndex = (currentIndex + 1) % videoDevices.length;
+      setCurrentDeviceId(videoDevices[nextIndex].deviceId);
+      console.log('Switching to camera:', videoDevices[nextIndex].label || videoDevices[nextIndex].deviceId);
+    } else {
+      // フォールバック: facingModeで切り替え
+      setCurrentFacingMode(prev => prev === "user" ? "environment" : "user");
+    }
+  };
 
   const handleCapture = async () => {
     if (!webcamRef.current || isCapturing || dimensions.width === 0) return;
@@ -125,11 +157,11 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
           audio={false}
           screenshotFormat="image/jpeg"
           videoConstraints={{
-            facingMode: "environment",
+            ...(currentDeviceId ? { deviceId: currentDeviceId } : { facingMode: currentFacingMode }),
             width: 1920,
             height: 1080,
           }}
-          mirrored={!isSelfie}
+          mirrored={currentFacingMode === "user"}
           className="w-full h-full object-cover"
           style={{ transform: "scaleX(-1)" }}
           onUserMediaError={(error) => {
@@ -159,6 +191,29 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
             />
           </div>
         )}
+
+        {/* カメラ切り替えボタン */}
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            onClick={toggleCamera}
+            disabled={isCapturing}
+            className="p-3 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 transition-all disabled:opacity-50"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="rotate-y-180"
+            >
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+              <path d="m9 7 3 3 3-3" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
