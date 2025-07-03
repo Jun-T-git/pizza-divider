@@ -19,7 +19,11 @@ export default function GroupPhotoPage() {
       formData.append('file', imageFile);
       formData.append('count', '4'); // 最大4人を想定
       
-      const response = await fetch('https://rocket2025-backend.onrender.com/api/face/emotion', {
+      const apiUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:8000/api/face/emotion'
+        : 'https://rocket2025-backend.onrender.com/api/face/emotion';
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
       });
