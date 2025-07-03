@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleGuide } from "@/components/CircleGuide";
+import { GroupPhotoGuide } from "@/components/GroupPhotoGuide";
 import type { CameraProps } from "@/types";
 import { PreciseCameraGuideManager } from "@/utils/preciseCameraGuide";
 import React, { useEffect, useRef, useState } from "react";
@@ -11,6 +12,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
   onError,
   isSelfie = false,
   showGuide = true, // デフォルトはガイド表示
+  guideType = 'pizza', // デフォルトはピザガイド
   overlayImage = null, // SVGオーバーレイ画像
 }) => {
   const webcamRef = useRef<Webcam>(null);
@@ -169,8 +171,16 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
           }}
         />
 
-        {dimensions.width > 0 && showGuide && !overlayImage && (
+        {dimensions.width > 0 && showGuide && !overlayImage && guideType === 'pizza' && (
           <CircleGuide
+            containerWidth={dimensions.width}
+            containerHeight={dimensions.height}
+            guideRatio={0.7}
+          />
+        )}
+
+        {dimensions.width > 0 && showGuide && !overlayImage && guideType === 'group-photo' && (
+          <GroupPhotoGuide
             containerWidth={dimensions.width}
             containerHeight={dimensions.height}
             guideRatio={0.7}

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 export default function EvaluatePage() {
   const router = useRouter();
-  const [svgAfterExplosion, setSvgAfterExplosion] = useState<string | null>(
+  const [, setSvgAfterExplosion] = useState<string | null>(
     null
   );
 
@@ -49,9 +49,10 @@ export default function EvaluatePage() {
           const formData = new FormData();
           formData.append("file", imageFile);
 
-          const apiUrl = process.env.NODE_ENV === "production"
-            ? "https://rocket2025-backend.onrender.com/api/pizza-cutter/score"
-            : "http://localhost:9000/api/pizza-cutter/score";
+          const apiUrl =
+            process.env.NODE_ENV === "production"
+              ? "https://rocket2025-backend.onrender.com/api/pizza-cutter/score"
+              : "http://localhost:9000/api/pizza-cutter/score";
 
           const response = await fetch(apiUrl, {
             method: "POST",
@@ -64,9 +65,12 @@ export default function EvaluatePage() {
 
           const scoreData = await response.json();
           console.log("公平性スコア:", scoreData);
-          
+
           if (scoreData.success) {
-            localStorage.setItem("fairnessScore", scoreData.fairness_score.toString());
+            localStorage.setItem(
+              "fairnessScore",
+              scoreData.fairness_score.toString()
+            );
           }
         } catch (apiError) {
           console.error("スコア計算APIエラー:", apiError);
@@ -103,7 +107,6 @@ export default function EvaluatePage() {
         onCapture={handleCapture}
         onError={handleError}
         showGuide={true}
-        overlayImage={svgAfterExplosion}
       />
     </div>
   );

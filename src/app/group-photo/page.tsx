@@ -11,7 +11,7 @@ export default function GroupPhotoPage() {
   const [showCamera, setShowCamera] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const callEmotionAPI = async (imageFile: File, imageData: string) => {
+  const callEmotionAPI = async (imageFile: File) => {
     try {
       setIsProcessing(true);
 
@@ -54,23 +54,22 @@ export default function GroupPhotoPage() {
       };
 
       try {
-        // Base64エンコードされた画像データを取得（data:image/...;base64,を除去）
-        const base64Image = imageData.split(',')[1];
-
         const apiUrl =
           process.env.NODE_ENV === "development"
             ? "http://localhost:9000/api/face/emotion"
             : "https://rocket2025-backend.onrender.com/api/face/emotion";
 
+        // FormDataを使用してmultipart/form-dataリクエストを作成
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        
+        // localStorageから実際の人数を取得
+        const peopleCount = localStorage.getItem("peopleCount") || '2';
+        formData.append('count', peopleCount);
+
         const response = await fetch(apiUrl, {
           method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            count: 4,
-            image: base64Image,
-          }),
+          body: formData,
         });
 
         if (!response.ok) {
@@ -110,7 +109,7 @@ export default function GroupPhotoPage() {
         );
 
         // 感情認識API呼び出し
-        await callEmotionAPI(imageFile, imageData);
+        await callEmotionAPI(imageFile);
 
         router.push("/bill-split");
       };
@@ -147,7 +146,8 @@ export default function GroupPhotoPage() {
         <CameraCaptureSimple
           onCapture={handleCapture}
           onError={handleError}
-          showGuide={false}
+          showGuide={true}
+          guideType="group-photo"
         />
 
         {isProcessing && (

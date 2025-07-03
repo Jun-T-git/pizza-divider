@@ -28,7 +28,8 @@ export interface CameraProps {
   onCapture: (imageFile: File) => void;
   onError?: (error: string) => void;
   isSelfie?: boolean; // カメラの向きを指定するオプション
-  showGuide?: boolean; // 円形ガイドの表示制御
+  showGuide?: boolean; // ガイドの表示制御
+  guideType?: 'pizza' | 'group-photo'; // ガイドの種類
   overlayImage?: string | null; // SVGオーバーレイ画像
 }
 

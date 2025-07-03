@@ -62,7 +62,7 @@ export default function Complete() {
             {/* グループ写真表示 */}
             {groupPhoto && (
               <div className="mb-8">
-                <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-sm bg-slate-50">
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm bg-slate-50">
                   <img
                     src={groupPhoto}
                     alt="グループ写真"
