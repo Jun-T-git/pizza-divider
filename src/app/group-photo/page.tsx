@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { CameraCaptureSimple } from '@/components/CameraCaptureSimple';
+import { CameraCaptureSimple } from "@/components/CameraCaptureSimple";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function GroupPhotoPage() {
   const router = useRouter();
@@ -14,24 +14,27 @@ export default function GroupPhotoPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageData = e.target?.result as string;
-        localStorage.setItem('groupPhoto', imageData);
-        localStorage.setItem('groupPhotoFile', JSON.stringify({
-          name: imageFile.name,
-          size: imageFile.size,
-          type: imageFile.type,
-          lastModified: imageFile.lastModified
-        }));
-        router.push('/bill-split');
+        localStorage.setItem("groupPhoto", imageData);
+        localStorage.setItem(
+          "groupPhotoFile",
+          JSON.stringify({
+            name: imageFile.name,
+            size: imageFile.size,
+            type: imageFile.type,
+            lastModified: imageFile.lastModified,
+          })
+        );
+        router.push("/bill-split");
       };
       reader.readAsDataURL(imageFile);
     } catch (error) {
-      console.error('Error saving group photo:', error);
-      alert('写真の保存に失敗しました');
+      console.error("Error saving group photo:", error);
+      alert("写真の保存に失敗しました");
     }
   };
 
   const handleError = (error: string) => {
-    console.error('Camera error:', error);
+    console.error("Camera error:", error);
     setShowCamera(false);
   };
 
@@ -46,13 +49,19 @@ export default function GroupPhotoPage() {
           <div className="bg-black bg-opacity-60 text-white p-4 rounded-lg text-center">
             <h1 className="text-lg font-semibold mb-2">集合写真撮影</h1>
             <p className="text-sm">
-              みんなでピザを囲んだ<br />
+              みんなでピザを囲んだ
+              <br />
               記念写真を撮りましょう！
             </p>
           </div>
         </div>
-        
-        <CameraCaptureSimple onCapture={handleCapture} onError={handleError} showGuide={false} />
+
+        <CameraCaptureSimple
+          onCapture={handleCapture}
+          onError={handleError}
+          isSelfie={true}
+          showGuide={false}
+        />
       </div>
     );
   }
@@ -62,15 +71,17 @@ export default function GroupPhotoPage() {
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="bg-purple-500 p-4">
-            <h1 className="text-white text-xl font-bold text-center">集合写真</h1>
+            <h1 className="text-white text-xl font-bold text-center">
+              集合写真
+            </h1>
           </div>
-          
+
           <div className="p-6">
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-3 text-center">
                 📸 みんなで記念撮影！
               </h2>
-              
+
               {/* カメラプレビューエリア */}
               <div className="relative w-full aspect-square rounded-lg overflow-hidden shadow-md bg-gray-100 mb-4">
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -82,7 +93,8 @@ export default function GroupPhotoPage() {
               </div>
 
               <p className="text-sm text-gray-600 text-center">
-                ピザの分割が完了しました！<br />
+                ピザの分割が完了しました！
+                <br />
                 みんなで記念写真を撮りましょう
               </p>
             </div>
