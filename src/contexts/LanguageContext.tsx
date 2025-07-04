@@ -37,9 +37,9 @@ const translations: Record<Language, Record<string, string>> = {
     "button.retake": "撮り直す",
     "button.use.photo": "この写真を使用",
     "button.home": "ホームに戻る",
-    "button.new.game": "新しいゲームを始める",
-    "button.split.bill": "支払いを確定",
-    "button.complete": "完了",
+    "button.new.game": "食べるピザを選ぶ",
+    "button.split.bill": "コピーしてSlackに貼り付け",
+    "button.complete": "その他の方法でシェア",
     "button.start_over": "最初から始める",
     "button.change_settings": "設定を変更",
 
