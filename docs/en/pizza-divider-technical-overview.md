@@ -1,3 +1,9 @@
+---
+layout: default
+title: Pizza Divider Application - Technical Overview
+lang: en
+---
+
 # Pizza Divider Application - Technical Overview
 
 ## Feature List
