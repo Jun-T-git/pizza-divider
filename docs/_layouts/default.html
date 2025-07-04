@@ -8,7 +8,7 @@
     <!-- No external stylesheet needed -->
     
     <!-- Mermaid.js for diagram rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
     
     <!-- Custom styles for better readability -->
     <style>
@@ -63,6 +63,16 @@
         .mermaid {
             text-align: center;
             margin: 20px 0;
+            background-color: #ffffff;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+        
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
         }
         
         blockquote {
@@ -142,12 +152,73 @@
     
     <!-- Initialize Mermaid -->
     <script>
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'default',
-            flowchart: {
-                useMaxWidth: true,
-                htmlLabels: true
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if mermaid is loaded
+            if (typeof mermaid !== 'undefined') {
+                try {
+                    mermaid.initialize({
+                        startOnLoad: false,
+                        theme: 'default',
+                        securityLevel: 'loose',
+                        flowchart: {
+                            useMaxWidth: true,
+                            htmlLabels: true,
+                            curve: 'basis'
+                        },
+                        sequence: {
+                            actorMargin: 50,
+                            width: 150,
+                            height: 65,
+                            boxMargin: 10,
+                            boxTextMargin: 5,
+                            noteMargin: 10,
+                            messageMargin: 35,
+                            mirrorActors: true,
+                            bottomMarginAdj: 1,
+                            useMaxWidth: true,
+                            rightAngles: false,
+                            showSequenceNumbers: false
+                        }
+                    });
+                    
+                    // Find and render mermaid diagrams
+                    const mermaidElements = document.querySelectorAll('pre code.language-mermaid, .language-mermaid code, pre.mermaid, .mermaid');
+                    mermaidElements.forEach(function(element, index) {
+                        const graphDefinition = element.textContent;
+                        const graphId = 'mermaid-' + index;
+                        
+                        // Create a new div for the rendered diagram
+                        const graphDiv = document.createElement('div');
+                        graphDiv.className = 'mermaid';
+                        graphDiv.id = graphId;
+                        graphDiv.innerHTML = graphDefinition;
+                        
+                        // Replace the original code block with the new div
+                        if (element.parentNode.tagName === 'PRE') {
+                            element.parentNode.parentNode.replaceChild(graphDiv, element.parentNode);
+                        } else {
+                            element.parentNode.replaceChild(graphDiv, element);
+                        }
+                    });
+                    
+                    // Run mermaid rendering
+                    mermaid.run();
+                } catch (error) {
+                    console.warn('Mermaid initialization failed:', error);
+                    // Fallback: show mermaid code blocks as code
+                    const mermaidElements = document.querySelectorAll('pre code.language-mermaid, .language-mermaid code');
+                    mermaidElements.forEach(function(element) {
+                        const pre = element.parentNode;
+                        pre.style.display = 'block';
+                        pre.style.backgroundColor = '#f8f9fa';
+                        pre.style.border = '1px solid #e1e4e8';
+                        pre.style.borderRadius = '6px';
+                        pre.style.padding = '16px';
+                        element.innerHTML = 'Mermaid diagram (rendering failed):<br><br>' + element.textContent;
+                    });
+                }
+            } else {
+                console.warn('Mermaid library not loaded');
             }
         });
     </script>
