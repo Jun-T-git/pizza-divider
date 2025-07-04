@@ -142,27 +142,46 @@
     
     <!-- Initialize Mermaid -->
     <script>
+        // Initialize Mermaid when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            mermaid.initialize({
-                startOnLoad: true,
-                theme: 'default',
-                themeVariables: {
-                    primaryColor: '#0066cc',
-                    primaryTextColor: '#333',
-                    primaryBorderColor: '#0066cc',
-                    lineColor: '#666',
-                    secondaryColor: '#f0f0f0',
-                    tertiaryColor: '#fff'
-                },
-                flowchart: {
-                    useMaxWidth: true,
-                    htmlLabels: true
-                },
-                sequence: {
-                    useMaxWidth: true,
-                    wrap: true
+            if (typeof mermaid !== 'undefined') {
+                mermaid.initialize({
+                    startOnLoad: true,
+                    theme: 'default',
+                    themeVariables: {
+                        primaryColor: '#0066cc',
+                        primaryTextColor: '#333',
+                        primaryBorderColor: '#0066cc',
+                        lineColor: '#666',
+                        secondaryColor: '#f0f0f0',
+                        tertiaryColor: '#fff'
+                    },
+                    flowchart: {
+                        useMaxWidth: true,
+                        htmlLabels: true
+                    },
+                    sequence: {
+                        useMaxWidth: true,
+                        wrap: true
+                    },
+                    securityLevel: 'loose'
+                });
+                
+                // Force re-render of any mermaid diagrams
+                setTimeout(function() {
+                    mermaid.init();
+                }, 100);
+            }
+        });
+        
+        // Alternative initialization for async loading
+        window.addEventListener('load', function() {
+            if (typeof mermaid !== 'undefined') {
+                const mermaidDivs = document.querySelectorAll('.mermaid');
+                if (mermaidDivs.length > 0) {
+                    mermaid.init(undefined, mermaidDivs);
                 }
-            });
+            }
         });
     </script>
 </body>

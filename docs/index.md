@@ -16,13 +16,16 @@ lang: en
 
 <div style="margin: 20px 0; padding: 15px; border-left: 4px solid #0066cc; background-color: #f1f3f4;">
 
-### [Technical Overview & Features](./en/pizza-divider-technical-overview.html)
+### [Browse All English Documents](./en/)
+Complete English documentation index
+
+### [Technical Overview & Features](./en/pizza-divider-technical-overview)
 Comprehensive overview of all features, user flows, sequence diagrams, and technical architecture
 
-### [Detailed Technical Documentation](./en/pizza-divider-detailed-technical-documentation.html)
+### [Detailed Technical Documentation](./en/pizza-divider-detailed-technical-documentation)
 In-depth technical specifications for engineers, frontend and backend technical excellence points
 
-### [Algorithm Implementation Guide](./en/pizza-divider-algorithm-explained.html)
+### [Algorithm Implementation Guide](./en/pizza-divider-algorithm-explained)
 Technical explanation of core algorithms including Moving Knife Method, emotion recognition, and fairness evaluation
 
 </div>
@@ -33,13 +36,16 @@ Technical explanation of core algorithms including Moving Knife Method, emotion 
 
 <div style="margin: 20px 0; padding: 15px; border-left: 4px solid #0066cc; background-color: #f1f3f4;">
 
-### [技術概要と機能一覧](./ja/pizza-divider-technical-overview.html)
+### [すべての日本語ドキュメントを閲覧](./ja/)
+完全な日本語ドキュメントインデックス
+
+### [技術概要と機能一覧](./ja/pizza-divider-technical-overview)
 アプリケーションの全機能、ユーザーフロー、シーケンス図、技術アーキテクチャの包括的な概要
 
-### [詳細技術ドキュメント](./ja/pizza-divider-detailed-technical-documentation.html)
+### [詳細技術ドキュメント](./ja/pizza-divider-detailed-technical-documentation)
 エンジニア向けの詳細な技術仕様、フロントエンドとバックエンドの技術的アピールポイント
 
-### [アルゴリズム実装ガイド](./ja/pizza-divider-algorithm-explained.html)
+### [アルゴリズム実装ガイド](./ja/pizza-divider-algorithm-explained)
 Moving Knife法、感情認識、公平性評価など、実装されているコアアルゴリズムの技術的解説
 
 </div>

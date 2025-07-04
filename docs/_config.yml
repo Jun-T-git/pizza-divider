@@ -1,4 +1,9 @@
 # GitHub Pages configuration for Jekyll
+title: "Pizza Divider Documentation"
+description: "Technical documentation for the Pizza Divider application"
+baseurl: ""
+url: "https://jun-t-git.github.io/pizza-divider"
+
 markdown: kramdown
 highlighter: rouge
 plugins:
@@ -8,23 +13,3 @@ plugins:
 kramdown:
   input: GFM
   syntax_highlighter: rouge
-
-# Custom header for Mermaid support
-head_scripts: |
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      mermaid.initialize({
-        startOnLoad: true,
-        theme: 'default',
-        themeVariables: {
-          primaryColor: '#0066cc',
-          primaryTextColor: '#333',
-          primaryBorderColor: '#0066cc',
-          lineColor: '#666',
-          secondaryColor: '#f0f0f0',
-          tertiaryColor: '#fff'
-        }
-      });
-    });
-  </script>
