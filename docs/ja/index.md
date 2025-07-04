@@ -6,9 +6,7 @@ lang: ja
 
 # 📖 日本語ドキュメント
 
-<div style="text-align: center; margin: 20px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-    <p><strong>AI駆動のピザ分割システムと感情ベース請求書分割機能を持つピザ分割アプリケーションの包括的な技術ドキュメントです</strong></p>
-</div>
+**AI駆動のピザ分割システムと感情ベース請求書分割機能を持つピザ分割アプリケーションの包括的な技術ドキュメントです**
 
 ## 📋 ドキュメント一覧
 
@@ -43,6 +41,6 @@ Moving Knife法、感情認識、公平性評価など、実装されている�
 
 ---
 
-<div style="text-align: center; margin-top: 40px;">
-    <a href="../">🏠 メインドキュメントに戻る</a>
-</div>
+---
+
+[🏠 メインドキュメントに戻る](../)

@@ -1,27 +1,25 @@
-# GitHub Pages configuration for Jekyll
+# GitHub Pages configuration
 title: "Pizza Divider Documentation"
 description: "Technical documentation for the Pizza Divider application"
 baseurl: "/pizza-divider"
 url: "https://jun-t-git.github.io"
 
+# Build settings
 markdown: kramdown
-highlighter: rouge
+theme: minima
 plugins:
-  - jekyll-github-metadata
-  - jekyll-relative-links
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
 
-# Enable Mermaid diagrams
+# Kramdown settings
 kramdown:
   input: GFM
   syntax_highlighter: rouge
+  hard_wrap: false
 
-# Enable relative links between markdown files
-relative_links:
-  enabled: true
-  collections: true
-
-# Exclude files from processing
+# Exclude files
 exclude:
   - Gemfile
   - Gemfile.lock
-  - vendor
+  - vendor/

@@ -6,10 +6,9 @@ lang: en
 
 # 📖 English Documentation
 
-<div style="text-align: center; margin: 20px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-    <p><strong>Comprehensive technical documentation for the Pizza Divider Application</strong></p>
-    <p>AI-powered pizza division system with emotion-based bill splitting</p>
-</div>
+**Comprehensive technical documentation for the Pizza Divider Application**
+
+AI-powered pizza division system with emotion-based bill splitting
 
 ## 📋 Documentation Index
 
@@ -44,6 +43,6 @@ Technical explanation of core algorithms including Moving Knife Method, emotion 
 
 ---
 
-<div style="text-align: center; margin-top: 40px;">
-    <a href="../">🏠 Back to Main Documentation</a>
-</div>
+---
+
+[🏠 Back to Main Documentation](../)

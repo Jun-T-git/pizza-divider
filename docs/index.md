@@ -6,15 +6,13 @@ lang: en
 
 # 🍕 Pizza Divider Application Documentation
 
-<div style="text-align: center; margin: 20px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-    <p><strong>Comprehensive technical documentation for the Pizza Divider Application</strong></p>
-    <p>AI-powered pizza division system with emotion-based bill splitting</p>
-    <p><strong>AI駆動のピザ分割システムと感情ベース請求書分割機能を持つピザ分割アプリケーションの包括的な技術ドキュメントです</strong></p>
-</div>
+**Comprehensive technical documentation for the Pizza Divider Application**
+
+AI-powered pizza division system with emotion-based bill splitting
+
+**AI駆動のピザ分割システムと感情ベース請求書分割機能を持つピザ分割アプリケーションの包括的な技術ドキュメントです**
 
 ## 📖 English Documentation
-
-<div style="margin: 20px 0; padding: 15px; border-left: 4px solid #0066cc; background-color: #f1f3f4;">
 
 ### [Browse All English Documents](./en/)
 Complete English documentation index
@@ -28,13 +26,9 @@ In-depth technical specifications for engineers, frontend and backend technical 
 ### [Algorithm Implementation Guide](./en/pizza-divider-algorithm-explained)
 Technical explanation of core algorithms including Moving Knife Method, emotion recognition, and fairness evaluation
 
-</div>
-
 ---
 
 ## 📖 日本語ドキュメント
-
-<div style="margin: 20px 0; padding: 15px; border-left: 4px solid #0066cc; background-color: #f1f3f4;">
 
 ### [すべての日本語ドキュメントを閲覧](./ja/)
 完全な日本語ドキュメントインデックス
@@ -47,8 +41,6 @@ Technical explanation of core algorithms including Moving Knife Method, emotion 
 
 ### [アルゴリズム実装ガイド](./ja/pizza-divider-algorithm-explained)
 Moving Knife法、感情認識、公平性評価など、実装されているコアアルゴリズムの技術的解説
-
-</div>
 
 ---
 
@@ -69,7 +61,8 @@ Moving Knife法、感情認識、公平性評価など、実装されている�
 
 ---
 
-<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e1e4e8; color: #666; font-size: 0.9em;">
-    <p><strong>Documentation generated for GitHub Pages deployment</strong></p>
-    <p>Comprehensive technical documentation for AI-powered pizza division system</p>
-</div>
+---
+
+**Documentation generated for GitHub Pages deployment**
+
+Comprehensive technical documentation for AI-powered pizza division system
