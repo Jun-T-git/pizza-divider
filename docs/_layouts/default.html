@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page.title | default: site.title }}</title>
     
-    <!-- GitHub Pages default styles -->
-    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+    <!-- No external stylesheet needed -->
     
     <!-- Mermaid.js for diagram rendering -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
@@ -126,6 +125,7 @@
             <a href="{{ site.baseurl }}/">🏠 Home</a>
             <a href="{{ site.baseurl }}/ja/">🇯🇵 日本語</a>
             <a href="{{ site.baseurl }}/en/">🇺🇸 English</a>
+            <a href="https://github.com/Jun-T-git/pizza-divider" target="_blank">📦 GitHub</a>
         </div>
         
         <!-- Main content -->
@@ -142,27 +142,13 @@
     
     <!-- Initialize Mermaid -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            mermaid.initialize({
-                startOnLoad: true,
-                theme: 'default',
-                themeVariables: {
-                    primaryColor: '#0066cc',
-                    primaryTextColor: '#333',
-                    primaryBorderColor: '#0066cc',
-                    lineColor: '#666',
-                    secondaryColor: '#f0f0f0',
-                    tertiaryColor: '#fff'
-                },
-                flowchart: {
-                    useMaxWidth: true,
-                    htmlLabels: true
-                },
-                sequence: {
-                    useMaxWidth: true,
-                    wrap: true
-                }
-            });
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
         });
     </script>
 </body>
