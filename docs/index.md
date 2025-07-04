@@ -57,6 +57,20 @@ Moving Knife法、感情認識、公平性評価など、実装されている�
 
 ---
 
+## 📦 Source Code Repositories
+
+### **Frontend Repository**
+[🔗 Jun-T-git/pizza-divider](https://github.com/Jun-T-git/pizza-divider)
+- Next.js 15 + TypeScript application
+- Real-time camera integration and Canvas API
+- AI-powered pizza division interface
+
+### **Backend Repository**  
+[🔗 tubasasakunn/rocket2025-backend](https://github.com/tubasasakunn/rocket2025-backend)
+- FastAPI with Python 3.13
+- YOLOv8/YOLOv11 models for pizza segmentation
+- Emotion recognition and fairness evaluation algorithms
+
 ---
 
 **Documentation generated for GitHub Pages deployment**

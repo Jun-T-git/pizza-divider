@@ -38,6 +38,20 @@ Technical explanation of core algorithms including Moving Knife Method, emotion 
 
 ---
 
+## 📦 Source Code Repositories
+
+### **Frontend Repository**
+[🔗 Jun-T-git/pizza-divider](https://github.com/Jun-T-git/pizza-divider)
+- Next.js 15 + TypeScript application
+- Real-time camera integration and Canvas API
+- AI-powered pizza division interface
+
+### **Backend Repository**  
+[🔗 tubasasakunn/rocket2025-backend](https://github.com/tubasasakunn/rocket2025-backend)
+- FastAPI with Python 3.13
+- YOLOv8/YOLOv11 models for pizza segmentation
+- Emotion recognition and fairness evaluation algorithms
+
 ---
 
 [🏠 Back to Main Documentation](../)

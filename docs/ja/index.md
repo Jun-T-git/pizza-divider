@@ -36,6 +36,20 @@ Moving Knife法、感情認識、公平性評価など、実装されている�
 
 ---
 
+## 📦 ソースコードリポジトリ
+
+### **フロントエンドリポジトリ**
+[🔗 Jun-T-git/pizza-divider](https://github.com/Jun-T-git/pizza-divider)
+- Next.js 15 + TypeScriptアプリケーション
+- リアルタイムカメラ統合とCanvas API
+- AI駆動ピザ分割インターフェース
+
+### **バックエンドリポジトリ**  
+[🔗 tubasasakunn/rocket2025-backend](https://github.com/tubasasakunn/rocket2025-backend)
+- FastAPI（Python 3.13）
+- ピザセグメンテーション用YOLOv8/YOLOv11モデル
+- 感情認識と公平性評価アルゴリズム
+
 ---
 
 [🏠 メインドキュメントに戻る](../)
