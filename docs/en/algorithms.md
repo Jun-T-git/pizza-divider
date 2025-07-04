@@ -1,10 +1,10 @@
 ---
 layout: default
-title: Pizza Divider Application - Implemented Algorithm Technical Explanation
+title: Algorithm Implementation
 lang: en
 ---
 
-# Pizza Divider Application - Implemented Algorithm Technical Explanation
+# Algorithm Implementation
 
 ## Overview
 

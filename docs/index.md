@@ -17,11 +17,11 @@ AI-powered pizza division system with emotion-based bill splitting
 ### [Browse All English Documents](./en/)
 Complete English documentation index
 
-### [Technical Overview & Features](./en/pizza-divider-technical-overview)
+### [Technical Overview](./en/overview)
 Comprehensive overview of all features, user flows, sequence diagrams, and technical architecture
 
 
-### [Algorithm Implementation Guide](./en/pizza-divider-algorithm-explained)
+### [Algorithm Implementation](./en/algorithms)
 Technical explanation of core algorithms including Moving Knife Method, emotion recognition, and fairness evaluation
 
 ---
@@ -31,11 +31,11 @@ Technical explanation of core algorithms including Moving Knife Method, emotion 
 ### [すべての日本語ドキュメントを閲覧](./ja/)
 完全な日本語ドキュメントインデックス
 
-### [技術概要と機能一覧](./ja/pizza-divider-technical-overview)
+### [技術概要](./ja/overview)
 アプリケーションの全機能、ユーザーフロー、シーケンス図、技術アーキテクチャの包括的な概要
 
 
-### [アルゴリズム実装ガイド](./ja/pizza-divider-algorithm-explained)
+### [アルゴリズム実装](./ja/algorithms)
 Moving Knife法、感情認識、公平性評価など、実装されているコアアルゴリズムの技術的解説
 
 ---

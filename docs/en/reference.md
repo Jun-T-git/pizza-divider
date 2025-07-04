@@ -1,10 +1,10 @@
 ---
 layout: default
-title: Pizza Divider Application - Detailed Technical Documentation for Engineers
+title: Technical Reference
 lang: en
 ---
 
-# Pizza Divider Application - Detailed Technical Documentation for Engineers
+# Technical Reference
 
 ## Executive Summary
 

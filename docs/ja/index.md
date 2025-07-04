@@ -10,11 +10,11 @@ lang: ja
 
 ## 📋 ドキュメント一覧
 
-### [技術概要と機能一覧](pizza-divider-technical-overview)
+### [技術概要](overview)
 アプリケーションの全機能、ユーザーフロー、シーケンス図、技術アーキテクチャの包括的な概要
 
 
-### [アルゴリズム実装ガイド](pizza-divider-algorithm-explained)
+### [アルゴリズム実装](algorithms)
 Moving Knife法、感情認識、公平性評価など、実装されているコアアルゴリズムの技術的解説
 
 ---

@@ -1,10 +1,10 @@
 ---
 layout: default
-title: Pizza Divider Application - Technical Overview
+title: Technical Overview
 lang: en
 ---
 
-# Pizza Divider Application - Technical Overview
+# Technical Overview
 
 ## Feature List
 
