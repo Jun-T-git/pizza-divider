@@ -905,6 +905,26 @@ export default function BillSplitPage() {
                 {t('button.complete')}
               </button>
 
+              <a
+                href="https://workers-hub.enterprise.slack.com/archives/C077LMG8ZS9/p1751600937550819"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-4 px-6 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all hover:scale-105 shadow-sm flex items-center justify-center gap-2"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M9 12l2 2 4-4" />
+                  <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
+                </svg>
+                🗳️ 投票はこちら！
+              </a>
+
               <button
                 onClick={handleComplete}
                 className="w-full py-4 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-all hover:scale-105 shadow-sm"
