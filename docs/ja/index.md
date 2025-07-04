@@ -13,11 +13,6 @@ lang: ja
 ### [技術概要と機能一覧](pizza-divider-technical-overview)
 アプリケーションの全機能、ユーザーフロー、シーケンス図、技術アーキテクチャの包括的な概要
 
-### [詳細技術ドキュメント](pizza-divider-detailed-technical-documentation)
-エンジニア向けの詳細な技術仕様、フロントエンドとバックエンドの技術的アピールポイント
-
-### [技術ドキュメント](pizza-divider-technical-documentation)
-システムアーキテクチャと実装詳細をカバーするコア技術ドキュメント
 
 ### [アルゴリズム実装ガイド](pizza-divider-algorithm-explained)
 Moving Knife法、感情認識、公平性評価など、実装されているコアアルゴリズムの技術的解説

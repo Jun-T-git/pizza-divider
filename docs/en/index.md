@@ -15,11 +15,6 @@ AI-powered pizza division system with emotion-based bill splitting
 ### [Technical Overview & Features](pizza-divider-technical-overview)
 Comprehensive overview of all features, user flows, sequence diagrams, and technical architecture
 
-### [Detailed Technical Documentation](pizza-divider-detailed-technical-documentation) 
-In-depth technical specifications for engineers, frontend and backend technical excellence points
-
-### [Technical Documentation](pizza-divider-technical-documentation)
-Core technical documentation covering system architecture and implementation details
 
 ### [Algorithm Implementation Guide](pizza-divider-algorithm-explained)
 Technical explanation of core algorithms including Moving Knife Method, emotion recognition, and fairness evaluation

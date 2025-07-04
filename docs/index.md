@@ -20,8 +20,6 @@ Complete English documentation index
 ### [Technical Overview & Features](./en/pizza-divider-technical-overview)
 Comprehensive overview of all features, user flows, sequence diagrams, and technical architecture
 
-### [Detailed Technical Documentation](./en/pizza-divider-detailed-technical-documentation)
-In-depth technical specifications for engineers, frontend and backend technical excellence points
 
 ### [Algorithm Implementation Guide](./en/pizza-divider-algorithm-explained)
 Technical explanation of core algorithms including Moving Knife Method, emotion recognition, and fairness evaluation
@@ -36,8 +34,6 @@ Technical explanation of core algorithms including Moving Knife Method, emotion 
 ### [技術概要と機能一覧](./ja/pizza-divider-technical-overview)
 アプリケーションの全機能、ユーザーフロー、シーケンス図、技術アーキテクチャの包括的な概要
 
-### [詳細技術ドキュメント](./ja/pizza-divider-detailed-technical-documentation)
-エンジニア向けの詳細な技術仕様、フロントエンドとバックエンドの技術的アピールポイント
 
 ### [アルゴリズム実装ガイド](./ja/pizza-divider-algorithm-explained)
 Moving Knife法、感情認識、公平性評価など、実装されているコアアルゴリズムの技術的解説
