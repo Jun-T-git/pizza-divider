@@ -5,9 +5,11 @@ import { calculateScore } from "@/utils/apiClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ScorePage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [beforeImage, setBeforeImage] = useState<string | null>(null);
   const [afterImage, setAfterImage] = useState<string | null>(null);
   const [score, setScore] = useState<number | null>(null);
@@ -78,14 +80,14 @@ export default function ScorePage() {
         }
       } catch (err) {
         console.error("Error evaluating division:", err);
-        setError("評価の計算に失敗しました");
+        setError(t('error.processing'));
       } finally {
         setIsLoading(false);
       }
     };
 
     loadAndEvaluate();
-  }, [router]);
+  }, [router, t]);
 
   // const handleSaveScore = async () => {
   //   if (score === null) return;
@@ -138,11 +140,11 @@ export default function ScorePage() {
   };
 
   const getScoreMessage = (score: number) => {
-    if (score >= 90) return "素晴らしい！完璧な分割です！";
-    if (score >= 80) return "とても良い分割です！";
-    if (score >= 70) return "良い分割です！";
-    if (score >= 60) return "まずまずの分割です";
-    return "次回はもう少し丁寧に分割してみましょう";
+    if (score >= 90) return t('score.message.perfect');
+    if (score >= 80) return t('score.message.excellent');
+    if (score >= 70) return t('score.message.good');
+    if (score >= 60) return t('score.message.fair');
+    return t('score.message.poor');
   };
 
   if (isLoading) {
@@ -153,9 +155,9 @@ export default function ScorePage() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
             <h2 className="text-xl font-medium text-slate-800 mb-2">
-              評価を計算中...
+              {t('loading.calculating')}
             </h2>
-            <p className="text-slate-600">分割の精度を解析しています</p>
+            <p className="text-slate-600">{t('score.description')}</p>
           </div>
         </div>
       </div>
@@ -170,14 +172,14 @@ export default function ScorePage() {
           <div className="text-center">
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h2 className="text-xl font-medium text-slate-800 mb-4">
-              エラーが発生しました
+              {t('error.title')}
             </h2>
             <p className="text-slate-600 mb-6">
-              {error || "画像データが見つかりません"}
+              {error || t('error.no_image_data')}
             </p>
             <Link href="/result">
               <button className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl transition-all hover:scale-105 shadow-sm">
-                分割結果に戻る
+                {t('nav.back')}
               </button>
             </Link>
           </div>
@@ -192,8 +194,8 @@ export default function ScorePage() {
 
       <div className="max-w-lg mx-auto p-6">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-medium text-slate-800 mb-2">評価結果</h2>
-          <p className="text-slate-600 text-sm">分割の精度を100点満点で評価</p>
+          <h2 className="text-xl font-medium text-slate-800 mb-2">{t('score.title')}</h2>
+          <p className="text-slate-600 text-sm">{t('score.description')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -202,7 +204,7 @@ export default function ScorePage() {
               <div
                 className={`text-5xl font-bold mb-2 ${getScoreColor(score)}`}
               >
-                {Math.floor(score)}点
+                {t('score.percent', { score: Math.floor(score) })}
               </div>
               <p className="text-lg text-gray-700 font-medium">
                 {getScoreMessage(score)}
@@ -212,12 +214,12 @@ export default function ScorePage() {
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                  分割前
+                  {t('score.before')}
                 </h3>
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden shadow-md bg-gray-100">
                   <img
                     src={beforeImage}
-                    alt="分割前のピザ"
+                    alt={t('score.before')}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -225,12 +227,12 @@ export default function ScorePage() {
 
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                  分割後
+                  {t('score.after')}
                 </h3>
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden shadow-md bg-gray-100">
                   <img
                     src={afterImage}
-                    alt="分割後のピザ"
+                    alt={t('score.after')}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -239,12 +241,12 @@ export default function ScorePage() {
 
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                📊 評価ポイント
+                📊 {t('score.comparison')}
               </h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• 分割線の正確性</li>
-                <li>• 各ピースの価値均等性</li>
-                <li>• サラミの分散度</li>
+                <li>• {t('score.fairness')}</li>
+                <li>• {t('score.comparison')}</li>
+                <li>• {t('loading.analyzing')}</li>
               </ul>
             </div>
 
@@ -300,13 +302,13 @@ export default function ScorePage() {
             <div className="space-y-3">
               <Link href="/roulette">
                 <button className="w-full py-4 px-6 my-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-all hover:scale-105 shadow-sm">
-                  食べるピザを選ぶ
+                  {t('button.new.game')}
                 </button>
               </Link>
 
               <Link href="/result">
                 <button className="w-full py-3 px-6 my-1.5 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
-                  分割結果に戻る
+                  {t('button.home')}
                 </button>
               </Link>
             </div>

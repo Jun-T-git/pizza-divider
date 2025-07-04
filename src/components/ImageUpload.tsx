@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ImageUploadProps {
   onCapture: (imageFile: File) => void;
@@ -17,6 +18,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   description,
   acceptedFormats = ['image/jpeg', 'image/png', 'image/webp']
 }) => {
+  const { t } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -24,14 +26,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const validateFile = (file: File): boolean => {
     // ファイルタイプチェック
     if (!acceptedFormats.includes(file.type)) {
-      onError?.(`対応していないファイル形式です。${acceptedFormats.map(f => f.split('/')[1]).join(', ')}形式のファイルを選択してください。`);
+      onError?.(t('error.file.format', { formats: acceptedFormats.map(f => f.split('/')[1]).join(', ') }));
       return false;
     }
 
     // ファイルサイズチェック (10MB制限)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      onError?.('ファイルサイズが大きすぎます。10MB以下のファイルを選択してください。');
+      onError?.(t('error.file.size'));
       return false;
     }
 
@@ -52,7 +54,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         img.onload = () => {
           // 最小解像度チェック
           if (img.width < 200 || img.height < 200) {
-            reject(new Error('画像の解像度が低すぎます。200x200ピクセル以上の画像を選択してください。'));
+            reject(new Error(t('error.resolution')));
             return;
           }
 
@@ -78,7 +80,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 resolve();
                 onCapture(processedFile);
               } else {
-                reject(new Error('画像の処理に失敗しました。'));
+                reject(new Error(t('error.processing')));
               }
             },
             'image/jpeg',
@@ -86,12 +88,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           );
         };
         
-        img.onerror = () => reject(new Error('画像の読み込みに失敗しました。'));
+        img.onerror = () => reject(new Error(t('error.load')));
         img.src = URL.createObjectURL(file);
       });
     } catch (error) {
       console.error('Image processing error:', error);
-      onError?.(error instanceof Error ? error.message : '画像の処理に失敗しました。');
+      onError?.(error instanceof Error ? error.message : t('error.processing'));
     } finally {
       setIsProcessing(false);
     }
@@ -156,15 +158,15 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 <div className="text-6xl">📷</div>
                 <div>
                   <p className="text-lg font-medium text-slate-800 mb-2">
-                    画像をアップロード
+                    {t('upload.title')}
                   </p>
                   <p className="text-sm text-slate-600 mb-4">
-                    ファイルを選択するかドラッグ&ドロップしてください
+                    {t('upload.description')}
                   </p>
                   <div className="text-xs text-slate-500 space-y-1">
-                    <p>対応形式: JPEG, PNG, WebP</p>
-                    <p>最大サイズ: 10MB</p>
-                    <p>推奨解像度: 200x200ピクセル以上</p>
+                    <p>{t('upload.formats')}</p>
+                    <p>{t('upload.max.size')}</p>
+                    <p>{t('upload.resolution')}</p>
                   </div>
                 </div>
               </div>
@@ -173,7 +175,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-3"></div>
-                    <p className="text-slate-600">画像を処理中...</p>
+                    <p className="text-slate-600">{t('upload.processing')}</p>
                   </div>
                 </div>
               )}
@@ -193,7 +195,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 disabled={isProcessing}
                 className="w-full py-4 px-6 rounded-xl font-medium text-lg transition-all bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-sm"
               >
-                {isProcessing ? '処理中...' : 'ファイルを選択'}
+                {isProcessing ? t('upload.processing') : t('upload.select.file')}
               </button>
             </div>
           </div>

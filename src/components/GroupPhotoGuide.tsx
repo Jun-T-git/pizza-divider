@@ -1,6 +1,7 @@
 'use client';
 
 import { PreciseCameraGuideManager } from '@/utils/preciseCameraGuide';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GroupPhotoGuideProps {
   containerWidth: number;
@@ -13,6 +14,7 @@ export const GroupPhotoGuide: React.FC<GroupPhotoGuideProps> = ({
   containerHeight,
   guideRatio = 0.7
 }) => {
+  const { t } = useLanguage();
   const preciseGuideManager = new PreciseCameraGuideManager(guideRatio);
   const displayGuide = preciseGuideManager.calculateDisplayGuide({ 
     width: containerWidth, 
@@ -118,7 +120,7 @@ export const GroupPhotoGuide: React.FC<GroupPhotoGuideProps> = ({
           textAlign: 'center'
         }}
       >
-        みんなで枠内に入って記念撮影しましょう
+        {t('group-photo.guide')}
       </div>
     </div>
   );

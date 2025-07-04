@@ -6,9 +6,11 @@ import { Header } from "@/components/Header";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function GroupPhotoPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [mode, setMode] = useState<'camera' | 'upload' | 'select'>('select');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -117,7 +119,7 @@ export default function GroupPhotoPage() {
       reader.readAsDataURL(imageFile);
     } catch (error) {
       console.error("Error saving group photo:", error);
-      alert("写真の保存に失敗しました");
+      alert(t('error.photo-save'));
     }
   };
 
@@ -131,11 +133,11 @@ export default function GroupPhotoPage() {
       <div className="relative">
         <div className="absolute top-4 left-4 right-4 z-10">
           <div className="bg-black bg-opacity-60 text-white p-4 rounded-lg text-center">
-            <h1 className="text-lg font-semibold mb-2">集合写真撮影</h1>
+            <h1 className="text-lg font-semibold mb-2">{t('group-photo.title')}</h1>
             <p className="text-sm">
-              みんなでピザを囲んだ
+              {t('group-photo.instruction.1')}
               <br />
-              記念写真を撮りましょう！
+              {t('group-photo.instruction.2')}
             </p>
           </div>
         </div>
@@ -151,7 +153,7 @@ export default function GroupPhotoPage() {
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
             <div className="bg-white rounded-lg p-6 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-3"></div>
-              <p className="text-slate-600">感情を分析中...</p>
+              <p className="text-slate-600">{t('group-photo.processing')}</p>
             </div>
           </div>
         )}
@@ -165,15 +167,15 @@ export default function GroupPhotoPage() {
         <ImageUpload
           onCapture={handleCapture}
           onError={handleError}
-          title="集合写真"
-          description="みんなでピザを囲んだ記念写真をアップロードしてください"
+          title={t('group-photo.subtitle')}
+          description={t('group-photo.description')}
         />
 
         {isProcessing && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
             <div className="bg-white rounded-lg p-6 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-3"></div>
-              <p className="text-slate-600">感情を分析中...</p>
+              <p className="text-slate-600">{t('group-photo.processing')}</p>
             </div>
           </div>
         )}
@@ -187,8 +189,8 @@ export default function GroupPhotoPage() {
 
       <div className="max-w-lg mx-auto p-6">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-medium text-slate-800 mb-2">集合写真</h2>
-          <p className="text-slate-600 text-sm">みんなで記念撮影をしましょう</p>
+          <h2 className="text-xl font-medium text-slate-800 mb-2">{t('group-photo.subtitle')}</h2>
+          <p className="text-slate-600 text-sm">{t('group-photo.description')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -199,15 +201,15 @@ export default function GroupPhotoPage() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className="text-5xl mb-3 opacity-60">📷</div>
-                    <p className="text-slate-500">記念撮影の準備</p>
+                    <p className="text-slate-500">{t('group-photo.preparation')}</p>
                   </div>
                 </div>
               </div>
 
               <p className="text-sm text-slate-600 text-center leading-relaxed">
-                ピザの分割が完了しました
+                {t('group-photo.completed')}
                 <br />
-                みんなで記念写真を撮りましょう
+                {t('group-photo.take.photo')}
               </p>
             </div>
 
@@ -216,19 +218,19 @@ export default function GroupPhotoPage() {
                 onClick={() => setMode('camera')}
                 className="w-full py-4 px-6 rounded-xl font-medium text-lg transition-all bg-slate-900 hover:bg-slate-800 hover:scale-105 text-white shadow-sm"
               >
-                📷 カメラで撮影
+                {t('button.camera')}
               </button>
 
               <button
                 onClick={() => setMode('upload')}
                 className="w-full py-3 px-6 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
               >
-                📁 ファイルをアップロード
+                {t('button.upload')}
               </button>
 
               <Link href="/bill-split">
                 <button className="w-full py-2 px-6 rounded-xl border border-slate-200 text-slate-500 text-sm font-medium hover:bg-slate-50 transition-colors">
-                  スキップして次へ
+                  {t('button.skip.next')}
                 </button>
               </Link>
             </div>

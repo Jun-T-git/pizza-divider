@@ -2,6 +2,7 @@
 
 import { CircleGuide } from "@/components/CircleGuide";
 import { GroupPhotoGuide } from "@/components/GroupPhotoGuide";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { CameraProps } from "@/types";
 import { PreciseCameraGuideManager } from "@/utils/preciseCameraGuide";
 import React, { useEffect, useRef, useState } from "react";
@@ -15,6 +16,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
   guideType = 'pizza', // デフォルトはピザガイド
   overlayImage = null, // SVGオーバーレイ画像
 }) => {
+  const { t } = useLanguage();
   const webcamRef = useRef<Webcam>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -72,7 +74,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
     try {
       const screenshot = webcamRef.current.getScreenshot();
       if (!screenshot) {
-        onError?.("撮影に失敗しました。");
+        onError?.(t('error.capture-failed'));
         return;
       }
 
@@ -92,7 +94,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
       // ビデオ要素から自然なサイズを取得
       const videoElement = webcamRef.current.video;
       if (!videoElement) {
-        onError?.("ビデオ要素にアクセスできませんでした。");
+        onError?.(t('error.video-access'));
         return;
       }
 
@@ -129,7 +131,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
       });
 
       if (!cropData.isValid) {
-        onError?.("トリミング領域が無効です。");
+        onError?.(t('error.processing'));
         return;
       }
 
@@ -138,14 +140,14 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
         cropData
       );
       if (!croppedFile) {
-        onError?.("画像の処理に失敗しました。");
+        onError?.(t('error.processing'));
         return;
       }
 
       onCapture(croppedFile);
     } catch (error) {
       console.error("Capture error:", error);
-      onError?.("撮影に失敗しました。");
+      onError?.(t('error.capture-failed'));
     } finally {
       setIsCapturing(false);
     }
@@ -167,7 +169,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
           className="w-full h-full object-cover"
           onUserMediaError={(error) => {
             console.error("Webcam error:", error);
-            onError?.("カメラにアクセスできませんでした。");
+            onError?.(t('error.camera'));
           }}
         />
 
@@ -248,7 +250,7 @@ export const CameraCaptureSimple: React.FC<CameraProps> = ({
           </button>
         </div>
         <p className="text-white text-center mt-4 text-sm">
-          {isCapturing ? "撮影中..." : "タップして撮影"}
+          {isCapturing ? t('ui.processing') : t('button.take.photo')}
         </p>
       </div>
     </div>

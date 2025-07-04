@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Complete() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [groupPhoto, setGroupPhoto] = useState<string | null>(null);
   const [billInfo, setBillInfo] = useState<{
     total: string;
@@ -52,11 +54,11 @@ export default function Complete() {
             <div className="text-6xl mb-8 opacity-80">🎉</div>
             
             <h1 className="text-3xl font-light text-slate-800 mb-4">
-              完了
+              {t('complete.title')}
             </h1>
             
             <p className="text-lg text-slate-600 mb-8">
-              お疲れ様でした
+              {t('complete.thank.you')}
             </p>
             
             {/* グループ写真表示 */}
@@ -65,7 +67,7 @@ export default function Complete() {
                 <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm bg-slate-50">
                   <img
                     src={groupPhoto}
-                    alt="グループ写真"
+                    alt={t('group-photo.subtitle')}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -75,30 +77,30 @@ export default function Complete() {
             <div className="space-y-4 text-left bg-slate-50 rounded-xl p-6 mb-8">
               <div className="flex items-center gap-4">
                 <span className="text-lg opacity-70">🍕</span>
-                <span className="text-slate-700">ピザを公平に分割しました</span>
+                <span className="text-slate-700">{t('complete.description')}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-lg opacity-70">🎯</span>
-                <span className="text-slate-700">ピースを割り当てました</span>
+                <span className="text-slate-700">{t('roulette.order.result')}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-lg opacity-70">📸</span>
-                <span className="text-slate-700">思い出の写真を撮影しました</span>
+                <span className="text-slate-700">{t('complete.memories')}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-lg opacity-70">💰</span>
                 <span className="text-slate-700">
-                  割り勘を計算しました
-                  {billInfo?.emotionBased && " (感情認識付き)"}
+                  {t('bill-split.title')}
+                  {billInfo?.emotionBased && ` (${t('bill-split.based.on.happiness')})`}
                 </span>
               </div>
             </div>
             
             <p className="text-slate-700 font-medium mb-2">
-              楽しいピザパーティーでしたね
+              {t('complete.enjoy')}
             </p>
             <p className="text-sm text-slate-500">
-              またのご利用をお待ちしています
+              {t('complete.memories')}
             </p>
           </div>
 
@@ -106,7 +108,7 @@ export default function Complete() {
             onClick={handleBackToStart}
             className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-4 px-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
           >
-            最初に戻る
+            {t('button.home')}
           </button>
         </div>
       </div>

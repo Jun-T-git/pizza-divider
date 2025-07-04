@@ -9,9 +9,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { PizzaCutterResponse } from "@/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [participants, setParticipants] = useState([
     { id: 1, name: "", color: AVAILABLE_COLORS_HEX[0], active: true },
@@ -41,7 +43,7 @@ export default function SettingsPage() {
 
   const addParticipant = () => {
     if (participants.length >= maxParticipants) {
-      alert(`最大${maxParticipants}人までです`);
+      alert(t('error.max-people', { max: maxParticipants }));
       return;
     }
 
@@ -64,7 +66,7 @@ export default function SettingsPage() {
 
   const removeParticipant = (id: number) => {
     if (participants.filter((p) => p.active).length <= 2) {
-      alert("最低2人は必要です");
+      alert(t('settings.min.people.error'));
       return;
     }
     setParticipants((prev) => prev.filter((p) => p.id !== id));
@@ -78,13 +80,13 @@ export default function SettingsPage() {
     try {
       const savedImageFile = localStorage.getItem("pizzaImageFile");
       if (!savedImageFile) {
-        throw new Error("画像ファイル情報が見つかりません");
+        throw new Error(t('error.no-image-file'));
       }
 
       const imageFileInfo = JSON.parse(savedImageFile);
       const savedImage = localStorage.getItem("pizzaImage");
       if (!savedImage) {
-        throw new Error("画像データが見つかりません");
+        throw new Error(t('error.no-image-data'));
       }
 
       // Base64データをBlobに変換
@@ -175,7 +177,7 @@ export default function SettingsPage() {
     const activeParticipants = getActiveParticipants();
 
     if (activeParticipants.length < 2) {
-      alert("最低2人の参加者が必要です");
+      alert(t('settings.min.people.error'));
       return;
     }
 
@@ -191,7 +193,7 @@ export default function SettingsPage() {
       router.push("/result");
     } catch (error) {
       console.error("Division calculation error:", error);
-      alert("分割線の計算に失敗しました");
+      alert(t('error.processing'));
     } finally {
       setIsCalculating(false);
     }
@@ -204,7 +206,7 @@ export default function SettingsPage() {
         <div className="flex items-center justify-center pt-32">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600">画像を読み込み中...</p>
+            <p className="text-slate-600">{t('ui.loading')}</p>
           </div>
         </div>
       </div>
@@ -218,10 +220,10 @@ export default function SettingsPage() {
       <div className="max-w-lg mx-auto p-6">
         <div className="text-center mb-6">
           <h2 className="text-xl font-medium text-slate-800 mb-2">
-            分割設定
+            {t('settings.title')}
           </h2>
           <p className="text-slate-600 text-sm">
-            参加者を設定してピザを分割しましょう
+            {t('settings.description')}
           </p>
         </div>
 
@@ -230,12 +232,12 @@ export default function SettingsPage() {
           <div className="p-6">
             <div className="mb-8">
               <h2 className="text-lg font-medium text-slate-800 mb-4">
-                撮影したピザ
+                {t('ui.photographed-pizza')}
               </h2>
               <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm bg-slate-50">
                 <img
                   src={imageUrl}
-                  alt="撮影したピザ"
+                  alt={t('ui.photographed-pizza')}
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -244,9 +246,9 @@ export default function SettingsPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-lg font-medium text-slate-800">参加者</h2>
+                  <h2 className="text-lg font-medium text-slate-800">{t('ui.participant')}</h2>
                   <p className="text-sm text-slate-600">
-                    {getActiveParticipants().length}人 / 最大{maxParticipants}人
+                    {t('settings.people.count', { count: getActiveParticipants().length })} / 最大{maxParticipants}人
                   </p>
                 </div>
                 <button
@@ -261,7 +263,7 @@ export default function SettingsPage() {
                     }
                   `}
                 >
-                  + 参加者を追加
+                  {t('button.add')}
                 </button>
               </div>
 
@@ -285,7 +287,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         handleNameChange(participant.id, e.target.value)
                       }
-                      placeholder={`参加者${index + 1}のニックネーム`}
+                      placeholder={t('settings.name.placeholder')}
                       className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-400 transition-all duration-200 text-slate-900 placeholder-slate-400 bg-white"
                     />
                     <div className="flex items-center gap-2">
@@ -304,7 +306,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => removeParticipant(participant.id)}
                           className="p-1 rounded hover:bg-slate-100 transition-colors"
-                          title="削除"
+                          title={t('button.delete')}
                         >
                           <svg
                             className="w-5 h-5 text-slate-400 hover:text-red-500"
@@ -331,7 +333,7 @@ export default function SettingsPage() {
                   onClick={addParticipant}
                   className="w-full mt-4 py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-500 hover:border-slate-400 hover:text-slate-600 transition-all duration-200"
                 >
-                  + 参加者を追加
+                  {t('button.add')}
                 </button>
               )}
             </div>
@@ -353,18 +355,18 @@ export default function SettingsPage() {
                 {isCalculating ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>
-                    計算中...
+                    {t('ui.processing')}
                   </>
                 ) : getActiveParticipants().length < 2 ? (
-                  "最低2人の参加者が必要です"
+                  t('settings.min.people.error')
                 ) : (
-                  `${getActiveParticipants().length}人で分割する`
+                  t('button.divide.pizza')
                 )}
               </button>
 
               <Link href="/camera">
                 <button className="w-full py-3 px-6 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
-                  撮り直す
+                  {t('button.retake')}
                 </button>
               </Link>
             </div>

@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EmotionResult {
   detected: number;
@@ -29,6 +30,7 @@ interface ParticipantWithPayment {
 
 export default function BillSplitPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [totalAmount, setTotalAmount] = useState<string>("3000");
   const [participants, setParticipants] = useState<ParticipantWithPayment[]>(
     []
@@ -234,7 +236,7 @@ export default function BillSplitPage() {
   };
 
   const getFaceDisplayName = (faceIndex: number) => {
-    return faceNameAssignments[faceIndex] || '名前を選択';
+    return faceNameAssignments[faceIndex] || t('bill-split.assign.name');
   };
 
   const getParticipantColor = (participantName: string) => {
@@ -461,15 +463,15 @@ export default function BillSplitPage() {
 
     const imageData = await generateShareImage();
     if (!imageData) {
-      alert('画像の生成に失敗しました。');
+      alert(t('error.share-generate'));
       return;
     }
 
     // 文言を作成
-    let message = `🍕 焼き立てのピザを配布中！\nGalaxyCutterで割り勘計算完了！\n\n💰 合計金額: ¥${parseInt(totalAmount || '0').toLocaleString()}\n`;
+    let message = `${t('share.title')}\n${t('share.subtitle')}\n\n${t('share.total-amount', { amount: parseInt(totalAmount || '0').toLocaleString() })}\n`;
 
     if (emotionResults && emotionResults.results && emotionResults.results.length > 0) {
-      message += `👥 参加者: ${emotionResults.detected}名\n\n`;
+      message += `${t('share.participants', { participants: emotionResults.detected })}\n\n`;
       const amounts = calculateEmotionAmounts(emotionResults.results, parseInt(totalAmount || '0'));
       emotionResults.results.forEach((result, index) => {
         const assignedName = faceNameAssignments[index];
@@ -478,13 +480,13 @@ export default function BillSplitPage() {
         message += `${displayName}: ¥${amount.toLocaleString()} (${Math.round(result.pay * 100)}%)\n`;
       });
     } else if (participants && participants.length > 0) {
-      message += `👥 参加者: ${participants.length}名\n\n`;
+      message += `${t('share.participants', { participants: participants.length })}\n\n`;
       participants.forEach((participant) => {
         message += `${participant.name}: ¥${(participant.amount || 0).toLocaleString()}\n`;
       });
     }
 
-    message += `\n✨ 感情認識AI による公平な割り勘計算\n📍 @17階 LODGEキッチン\n\n#ROCKET_PIZZA #HackId19 #Hackday2025 #RocketFactory`;
+    message += `\n${t('share.ai-calculation')}\n${t('share.app-link')}\n\n#ROCKET_PIZZA #HackId19 #Hackday2025 #RocketFactory`;
 
     // スマホかどうかを判定
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -538,7 +540,7 @@ export default function BillSplitPage() {
         link.click();
         document.body.removeChild(link);
 
-        alert('📱 文言をコピーし、画像をダウンロードしました！\n\n1. Slackに文言を貼り付け\n2. 画像を添付してください');
+        alert(t('share.success.mobile'));
 
       } catch (clipError) {
         console.error('Mobile clipboard failed:', clipError);
@@ -551,7 +553,7 @@ export default function BillSplitPage() {
         link.click();
         document.body.removeChild(link);
 
-        alert('📱 画像をダウンロードしました！\n\n以下の文言をコピーしてSlackに投稿してください：\n\n' + message);
+        alert(t('share.success.image-download', { message }));
       }
     } else {
       // PC の場合：ClipboardItem を使用
@@ -571,7 +573,7 @@ export default function BillSplitPage() {
         // クリップボードに書き込み
         await navigator.clipboard.write(clipboardItems);
 
-        alert('💻 画像と文言をクリップボードにコピーしました！\nSlackに貼り付けてください。');
+        alert(t('share.success.clipboard'));
 
       } catch (error) {
         console.error('PC Clipboard copy failed:', error);
@@ -588,11 +590,11 @@ export default function BillSplitPage() {
           link.click();
           document.body.removeChild(link);
 
-          alert('💻 文言をコピーし、画像をダウンロードしました！\n両方をSlackに投稿してください。');
+          alert(t('share.success.text-image'));
 
         } catch (textError) {
           console.error('Text copy also failed:', textError);
-          alert('⚠️ コピーに失敗しました。手動でシェアしてください。');
+          alert(t('share.error.copy'));
         }
       }
     }
@@ -610,7 +612,7 @@ export default function BillSplitPage() {
 
     if (!imageData) {
       console.error('Image generation failed - no data returned');
-      alert('画像の生成に失敗しました。コンソールを確認してください。');
+      alert(t('error.share-generate'));
       return;
     }
 
@@ -632,7 +634,7 @@ export default function BillSplitPage() {
           console.log('Can share files, sharing...');
           await navigator.share({
             title: 'GalaxyCutter 割り勘結果',
-            text: `🍕 焼き立てのピザを配布中！\n合計¥${parseInt(totalAmount || '0').toLocaleString()}の割り勘結果\n\n#ROCKET_PIZZA #HackId19 #Hackday2025 #RocketFactory`,
+            text: `${t('share.title')}\n${t('share.total-amount', { amount: parseInt(totalAmount || '0').toLocaleString() })}\n\n#ROCKET_PIZZA #HackId19 #Hackday2025 #RocketFactory`,
             files: [file]
           });
           console.log('Share completed successfully');
@@ -655,7 +657,7 @@ export default function BillSplitPage() {
     } catch (error) {
       console.error('Share failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert(`シェアに失敗しました: ${errorMessage}`);
+      alert(t('share.error.failed', { error: errorMessage }));
     }
   };
 
@@ -705,9 +707,9 @@ export default function BillSplitPage() {
       <div className="max-w-lg mx-auto p-6">
         <div className="text-center mb-6">
           <h2 className="text-xl font-medium text-slate-800 mb-2">
-            割り勘計算
+            {t('bill-split.title')}
           </h2>
-          <p className="text-slate-600 text-sm">お会計を入力してください</p>
+          <p className="text-slate-600 text-sm">{t('bill-split.description')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -719,12 +721,12 @@ export default function BillSplitPage() {
                   <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm bg-slate-50">
                     <img
                       src={groupPhoto}
-                      alt="グループ写真"
+                      alt={t('group-photo.subtitle')}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <p className="text-xs text-slate-500 text-center mt-2">
-                    みんなの記念写真
+                    {t('group-photo.subtitle')}
                   </p>
                 </div>
               )}
@@ -732,7 +734,7 @@ export default function BillSplitPage() {
               {/* 金額入力 */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-slate-700 mb-3">
-                  合計金額
+                  {t('bill-split.total.amount')}
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">
@@ -743,7 +745,7 @@ export default function BillSplitPage() {
                     value={totalAmount}
                     onChange={(e) => handleAmountChange(e.target.value)}
                     className="w-full pl-10 pr-4 py-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-400 focus:border-transparent text-lg font-medium bg-white text-gray-700"
-                    placeholder="0"
+                    placeholder={t('bill-split.amount.placeholder')}
                   />
                 </div>
               </div>
@@ -752,8 +754,8 @@ export default function BillSplitPage() {
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-slate-700 mb-4">
                   {emotionResults
-                    ? `検出された顔 (${emotionResults.detected}名)`
-                    : `参加者 (${participants.length}名)`}
+                    ? `${t('bill-split.assign.faces')} (${emotionResults.detected}${t('bill-split.currency')})`
+                    : `${t('bill-split.total')} (${participants.length}${t('bill-split.currency')})`}
                 </h3>
                 <div className="space-y-3">
                   {emotionResults && emotionResults.results
@@ -776,7 +778,7 @@ export default function BillSplitPage() {
                                   {result.face ? (
                                     <img
                                       src={result.face}
-                                      alt={`顔${index + 1}`}
+                                      alt={t('bill-split.face.image', { number: index + 1 })}
                                       className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                                     />
                                   ) : (
@@ -796,20 +798,20 @@ export default function BillSplitPage() {
                                       {getFaceDisplayName(index)}
                                     </button>
                                     <div className="text-xs text-slate-500">
-                                      {result.dominant} (
+                                      {t('bill-split.emotion')}: {result.dominant} (
                                       {Math.round(result.pay * 100)}%)
                                     </div>
                                   </div>
                                 </div>
                                 <span className="text-slate-900 font-semibold">
-                                  ¥{amount.toLocaleString()}
+                                  {t('bill-split.currency')}{amount.toLocaleString()}
                                 </span>
                               </div>
 
                               {/* 名前選択UI */}
                               {showNameSelector === index && (
                                 <div className="mt-2 p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
-                                  <p className="text-xs text-slate-600 mb-2">参加者を選択:</p>
+                                  <p className="text-xs text-slate-600 mb-2">{t('bill-split.assign.instruction')}</p>
                                   <div className="flex flex-wrap gap-2">
                                     {getAvailableParticipants().map((participant) => (
                                       <button
@@ -829,7 +831,7 @@ export default function BillSplitPage() {
                                         onClick={() => handleFaceNameAssignment(index, '')}
                                         className="px-3 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full transition-all hover:scale-105 shadow-sm"
                                       >
-                                        削除
+                                        {t('button.delete')}
                                       </button>
                                     )}
                                   </div>
@@ -847,11 +849,11 @@ export default function BillSplitPage() {
                         >
                           <div className="flex items-center gap-3">
                             <span className="font-medium text-slate-800">
-                              {participant.name || `参加者${index + 1}`}
+                              {participant.name || `${t('settings.participant', { number: index + 1 })}`}
                             </span>
                           </div>
                           <span className="text-slate-900 font-semibold">
-                            ¥{(participant.amount || 0).toLocaleString()}
+                            {t('bill-split.currency')}{(participant.amount || 0).toLocaleString()}
                           </span>
                         </div>
                       ))}
@@ -859,8 +861,8 @@ export default function BillSplitPage() {
               </div>
               <p className="text-xs text-slate-500 text-center">
                 {emotionResults
-                  ? "※ 感情認識結果をもとに支払い比率を計算しています"
-                  : "※ 端数は切り上げて計算しています"}
+                  ? t('bill-split.based.on.happiness')
+                  : t('bill-split.payment')}
               </p>
             </div>
 
@@ -880,7 +882,7 @@ export default function BillSplitPage() {
                   <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                   <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                 </svg>
-                📋 コピーしてSlackに貼り付け
+                📋 {t('button.split.bill')}
               </button>
 
 
@@ -900,19 +902,19 @@ export default function BillSplitPage() {
                   <polyline points="16,6 12,2 8,6" />
                   <line x1="12" y1="2" x2="12" y2="15" />
                 </svg>
-                その他の方法でシェア
+                {t('button.complete')}
               </button>
 
               <button
                 onClick={handleComplete}
                 className="w-full py-4 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-all hover:scale-105 shadow-sm"
               >
-                完了する
+                {t('button.complete')}
               </button>
 
               <Link href="/group-photo">
                 <button className="w-full py-3 px-6 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
-                  戻る
+                  {t('nav.back')}
                 </button>
               </Link>
             </div>

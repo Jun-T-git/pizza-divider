@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { Header } from "./Header";
 import PizzaPieces from "./PizzaPieces";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // 型定義
 interface PizzaPiece {
@@ -27,6 +28,7 @@ interface User {
 
 const PizzaRouletteUI: React.FC = () => {
   const router = useRouter();
+  const { t } = useLanguage();
   const [pieces, setPieces] = useState<PizzaPiece[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -119,7 +121,7 @@ const PizzaRouletteUI: React.FC = () => {
                 index: number
               ) => ({
                 id: p.id || index + 1,
-                nickname: p.name || `参加者${p.id || index + 1}`,
+                nickname: p.name || t('ui.participant-number', { number: p.id || index + 1 }),
                 color: p.color || "#ef4444", // 色情報を保持（デフォルトは赤）
               })
             );
@@ -135,7 +137,7 @@ const PizzaRouletteUI: React.FC = () => {
       // 参加者情報がない場合は設定画面へリダイレクト
       router.push("/settings");
     }
-  }, [router]);
+  }, [router, t]);
 
   // 平等なピース分配機能
   const startDistribution = () => {
@@ -239,10 +241,10 @@ const PizzaRouletteUI: React.FC = () => {
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
         <div className="text-center mb-6">
           <h2 className="text-xl font-medium text-slate-800 mb-2">
-            ピザの分け方を決めよう
+            {t('roulette.pizza.title')}
           </h2>
           <p className="text-slate-600 text-sm">
-            誰がどの部分を食べるか決めましょう
+            {t('roulette.pizza.description')}
           </p>
         </div>
 
@@ -262,7 +264,7 @@ const PizzaRouletteUI: React.FC = () => {
               <div className="inline-flex items-center space-x-3">
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-300 border-t-slate-600"></div>
                 <span className="text-slate-600 font-medium">
-                  誰がどこを食べるか決めています...
+                  {t('roulette.pizza.deciding')}
                 </span>
               </div>
             </div>
@@ -277,7 +279,7 @@ const PizzaRouletteUI: React.FC = () => {
                 onClick={startDistribution}
                 className="bg-slate-900 hover:bg-slate-800 text-white font-medium py-4 px-8 rounded-xl text-lg transition-all duration-200 hover:scale-105 shadow-sm"
               >
-                みんなで分け方を決める
+{t('roulette.pizza.button.decide')}
               </button>
             </div>
           )}
@@ -289,8 +291,8 @@ const PizzaRouletteUI: React.FC = () => {
               </div>
               <p className="text-slate-600 font-medium">
                 {isColorAnimating
-                  ? "誰がどこを食べるか決めています..."
-                  : "分け方を決めています..."}
+                  ? t('roulette.pizza.deciding')
+                  : t('ui.processing')}
               </p>
             </div>
           )}
@@ -299,10 +301,10 @@ const PizzaRouletteUI: React.FC = () => {
             <div className="p-6 sm:p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl sm:text-3xl font-light text-slate-800 mb-2">
-                  分け方が決まりました！
+                  {t('roulette.pizza.decided')}
                 </h2>
                 <p className="text-slate-600">
-                  みんなの食べる部分が決まりました
+                  {t('roulette.pizza.assigned')}
                 </p>
               </div>
 
@@ -361,7 +363,7 @@ const PizzaRouletteUI: React.FC = () => {
               <div className="bg-blue-50 rounded-xl p-4 mb-6">
                 <div className="text-center">
                   <p className="text-sm text-slate-600 mb-4">
-                    ピザパーティーの様子を写真におさめましょう！
+                    {t('roulette.pizza.description.photo')}
                   </p>
                 </div>
               </div>
@@ -390,7 +392,7 @@ const PizzaRouletteUI: React.FC = () => {
                       d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                     />
                   </svg>
-                  みんなで記念写真を撮る
+{t('roulette.pizza.button.photo')}
                 </button>
 
                 <button
@@ -410,7 +412,7 @@ const PizzaRouletteUI: React.FC = () => {
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  もう一度決め直す
+{t('roulette.pizza.button.restart')}
                 </button>
               </div>
             </div>

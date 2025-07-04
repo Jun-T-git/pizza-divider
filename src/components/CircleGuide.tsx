@@ -1,6 +1,7 @@
 'use client';
 
 import { PreciseCameraGuideManager } from '@/utils/preciseCameraGuide';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CircleGuideProps {
   containerWidth: number;
@@ -13,6 +14,7 @@ export const CircleGuide: React.FC<CircleGuideProps> = ({
   containerHeight,
   guideRatio = 0.7
 }) => {
+  const { t } = useLanguage();
   const preciseGuideManager = new PreciseCameraGuideManager(guideRatio);
   const displayGuide = preciseGuideManager.calculateDisplayGuide({ 
     width: containerWidth, 
@@ -88,7 +90,7 @@ export const CircleGuide: React.FC<CircleGuideProps> = ({
           textAlign: 'center'
         }}
       >
-        枠内にピザを収めてください
+        {t('ui.pizza-in-frame')}
       </div>
     </div>
   );

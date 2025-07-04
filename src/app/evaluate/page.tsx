@@ -6,9 +6,11 @@ import { Header } from "@/components/Header";
 import { PizzaCutterResponse } from "@/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function EvaluatePage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [mode, setMode] = useState<'camera' | 'upload' | 'select'>('select');
   const [, setSvgAfterExplosion] = useState<string | null>(
     null
@@ -85,7 +87,7 @@ export default function EvaluatePage() {
       reader.readAsDataURL(imageFile);
     } catch (error) {
       console.error("Error saving after image:", error);
-      alert("画像の保存に失敗しました");
+      alert(t('error.image-save'));
     }
   };
 
@@ -98,11 +100,11 @@ export default function EvaluatePage() {
       <div className="relative">
         <div className="absolute top-4 left-4 right-4 z-10">
           <div className="bg-black bg-opacity-60 text-white p-4 rounded-lg text-center">
-            <h1 className="text-lg font-semibold mb-2">分割後の評価</h1>
+            <h1 className="text-lg font-semibold mb-2">{t('evaluate.title')}</h1>
             <p className="text-sm">
-              実際に切り分けたピザを撮影して
+              {t('evaluate.instruction.1')}
               <br />
-              分割の精度を評価します
+              {t('evaluate.instruction.2')}
             </p>
           </div>
         </div>
@@ -121,8 +123,8 @@ export default function EvaluatePage() {
       <ImageUpload
         onCapture={handleCapture}
         onError={handleError}
-        title="分割後の評価"
-        description="実際に切り分けたピザの写真をアップロードして分割の精度を評価します"
+        title={t('evaluate.title')}
+        description={t('evaluate.description')}
       />
     );
   }
@@ -133,8 +135,8 @@ export default function EvaluatePage() {
       
       <div className="max-w-lg mx-auto p-6">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-medium text-slate-800 mb-2">分割後の評価</h2>
-          <p className="text-slate-600 text-sm">実際に切り分けたピザを撮影して分割の精度を評価します</p>
+          <h2 className="text-xl font-medium text-slate-800 mb-2">{t('evaluate.title')}</h2>
+          <p className="text-slate-600 text-sm">{t('evaluate.description')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -145,15 +147,13 @@ export default function EvaluatePage() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className="text-5xl mb-3 opacity-60">🍕</div>
-                    <p className="text-slate-500">分割後の撮影準備</p>
+                    <p className="text-slate-500">{t('evaluate.preparation')}</p>
                   </div>
                 </div>
               </div>
 
               <p className="text-sm text-slate-600 text-center leading-relaxed">
-                切り分けたピザの写真を撮影します
-                <br />
-                撮影方法を選択してください
+                {t('evaluate.select.method')}
               </p>
             </div>
 
@@ -162,14 +162,14 @@ export default function EvaluatePage() {
                 onClick={() => setMode('camera')}
                 className="w-full py-4 px-6 rounded-xl font-medium text-lg transition-all bg-slate-900 hover:bg-slate-800 hover:scale-105 text-white shadow-sm"
               >
-                📷 カメラで撮影
+                📷 {t('button.camera')}
               </button>
 
               <button
                 onClick={() => setMode('upload')}
                 className="w-full py-3 px-6 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
               >
-                📁 ファイルをアップロード
+                📁 {t('button.upload')}
               </button>
             </div>
           </div>

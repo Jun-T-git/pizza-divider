@@ -1,12 +1,14 @@
 'use client';
 
 import { DivisionOverlayProps } from '@/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const DivisionOverlay: React.FC<DivisionOverlayProps> = ({
   imageUrl,
   overlayImage,
   pieceValues = []
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="relative w-full max-w-md mx-auto">
       {/* 正方形のコンテナ */}
@@ -33,14 +35,14 @@ export const DivisionOverlay: React.FC<DivisionOverlayProps> = ({
 
       {pieceValues.length > 0 && (
         <div className="mt-4 space-y-2">
-          <h3 className="text-lg font-semibold text-gray-800">各ピースの価値</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{t('ui.piece-value')}</h3>
           <div className="grid grid-cols-2 gap-2">
             {pieceValues.map((value, index) => (
               <div
                 key={index}
                 className="bg-orange-100 border border-orange-300 rounded-lg p-3 text-center"
               >
-                <div className="text-sm text-gray-600">ピース {index + 1}</div>
+                <div className="text-sm text-gray-600">{t('ui.piece')} {index + 1}</div>
                 <div className="text-lg font-bold text-orange-600">{value}%</div>
               </div>
             ))}
